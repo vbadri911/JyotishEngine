@@ -10,9 +10,9 @@ layer is fully owned, auditable, and free to run indefinitely.
 
 ## Status against the project's phase plan (P1-P8)
 
-The authoritative phase plan lives in `docs/requirements-spec.md` (pending --
-not yet added to this repo). Status below is this project's own honest
-read of it, not a copy of that document:
+The authoritative phase plan lives in
+[`docs/requirements-spec.md`](docs/requirements-spec.md) -- read that first.
+Status below is this project's own honest read of it, not a copy:
 
 | Phase | Status |
 |---|---|

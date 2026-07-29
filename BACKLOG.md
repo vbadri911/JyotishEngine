@@ -6,17 +6,20 @@ See `README.md` for current status.
 
 ## Next up
 
-1. **Expand the golden-chart set** to the 30-50 chart target in the project
-   spec (§9), covering: cusp Ascendants, polar/equatorial latitudes,
-   pre-1906 Indian births and the Bombay/Calcutta extended-local-time window
-   (now exercised at the unit level in `tests/timezone.test.ts`/
-   `tests/location.test.ts`, but not yet via a full golden chart through
-   `computeChart()`), DST-affected locations, near-midnight births, leap
-   days.
-2. **P7, living document** (dasha/Antardasha/Pratyantardasha transition
-   alerts as `.ics`, versioned regeneration with diffs) -- core MVP scope,
+1. **Expand the golden-chart set** to the 30-50 chart target in
+   `docs/requirements-spec.md` §10 (Validation), covering: cusp Ascendants,
+   polar/equatorial latitudes, pre-1906 Indian births and the
+   Bombay/Calcutta extended-local-time window (now exercised at the unit
+   level in `tests/timezone.test.ts`/`tests/location.test.ts`, but not yet
+   via a full golden chart through `computeChart()`), DST-affected
+   locations, near-midnight births, leap days.
+2. **P7, living document** (§9): `.ics` export of every dasha/Antardasha/
+   Pratyantardasha transition **plus Jupiter/Saturn ingresses** (not yet
+   scoped into anything built -- transit positions aren't computed at all
+   yet, only natal), versioned regeneration with diffs -- core MVP scope,
    not deferred. `computeChart()` now exposes `currentDashaPeriod` and full
-   `mahadashas`/`Finding[]` output; this is the input P7 needs.
+   `mahadashas`/`Finding[]` output; dasha-side input for P7 exists, the
+   Jupiter/Saturn transit side does not yet.
 3. **P5 narrative templates** and **P6 document assembly** -- not started,
    intentionally not begun yet (see `README.md`).
 
@@ -56,22 +59,29 @@ See `README.md` for current status.
 ## Deferred features (out of scope for now)
 
 Per `.claude/skills/jyotish-engine/SKILL.md`'s "Chapters relevant to work
-not yet done" table -- check the cited BPHS chapters directly when any of
-these become active work, rather than reconstructing from memory or a
-secondary source:
+not yet done" table and `docs/requirements-spec.md` §4/§11 -- check the cited
+BPHS chapters directly when any of these become active work, rather than
+reconstructing from memory or a secondary source:
 
 - Shadbala (six-fold planetary strength)
 - Ashtakavarga
-- Divisional charts beyond D1/D9 (D2-D60)
-- Nabhasa yogas
-- Raja Yoga combinations beyond the current simplified subset
-- Karakas / Atmakaraka (Jaimini-style)
-- Dasha systems other than Vimshottari
+- Divisional charts beyond D1/D9 (D2-D60, remaining shodasavarga)
+- Nabhasa yogas (BPHS Ch. 35)
+- Raja Yoga combinations beyond the current simplified subset (Ch. 39-41)
+- Kala Sarpa, Shakata, Sade Sati doshas
+- Karakas / Atmakaraka (Jaimini-style, Ch. 32-33)
+- Dasha systems other than Vimshottari (Ashtottari, Kalachakra, etc.)
 - House systems other than Whole Sign; chart formats other than South Indian
+  (North Indian, Bengali)
+- Birth-time rectification wizard; compatibility/synastry; multi-chart
+  family view; practitioner review/annotation export; conversational chat
+  over the chart
+- Longevity calculation -- explicitly out of scope per "never trade on
+  fear"; do not implement without revisiting that constraint first
 
 ## Not started
 
 - P5 narrative templates
 - P6 document assembly (PDF/DOCX)
-- P7 living document (.ics dasha alerts, versioned regeneration) -- see "Next up" above, core MVP scope
+- P7 living document (.ics dasha alerts + Jupiter/Saturn ingresses, versioned regeneration) -- see "Next up" above, core MVP scope; transit computation (Jupiter/Saturn's current/future position) doesn't exist yet, only natal
 - P8 languages (`ta`/`hi`/`te` narrative output; type stub exists, no implementation) -- blocked on P5
