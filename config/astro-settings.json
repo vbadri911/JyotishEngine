@@ -1,0 +1,8 @@
+{
+  "_source": "See SKILL.md 'Default settings'. Change only on explicit instruction, and when validating against an existing report, MATCH THAT REPORT'S SETTINGS FIRST -- otherwise comparisons show false 'bugs' that are actually school mismatches.",
+  "ayanamsa": "lahiri",
+  "nodeType": "mean",
+  "houseSystem": "whole_sign",
+  "nodesHaveSpecialAspects": false,
+  "chartFormat": "south_indian"
+}

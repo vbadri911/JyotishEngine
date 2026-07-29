@@ -1,0 +1,24 @@
+{
+  "_source": "See references/constants.md",
+  "signs": [
+    { "index": 1,  "name": "Aries",       "element": "Fire",  "modality": "movable", "lord": "Mars" },
+    { "index": 2,  "name": "Taurus",      "element": "Earth", "modality": "fixed",   "lord": "Venus" },
+    { "index": 3,  "name": "Gemini",      "element": "Air",   "modality": "dual",    "lord": "Mercury" },
+    { "index": 4,  "name": "Cancer",      "element": "Water", "modality": "movable", "lord": "Moon" },
+    { "index": 5,  "name": "Leo",         "element": "Fire",  "modality": "fixed",   "lord": "Sun" },
+    { "index": 6,  "name": "Virgo",       "element": "Earth", "modality": "dual",    "lord": "Mercury" },
+    { "index": 7,  "name": "Libra",       "element": "Air",   "modality": "movable", "lord": "Venus" },
+    { "index": 8,  "name": "Scorpio",     "element": "Water", "modality": "fixed",   "lord": "Mars" },
+    { "index": 9,  "name": "Sagittarius", "element": "Fire",  "modality": "dual",    "lord": "Jupiter" },
+    { "index": 10, "name": "Capricorn",   "element": "Earth", "modality": "movable", "lord": "Saturn" },
+    { "index": 11, "name": "Aquarius",    "element": "Air",   "modality": "fixed",   "lord": "Saturn" },
+    { "index": 12, "name": "Pisces",      "element": "Water", "modality": "dual",    "lord": "Jupiter" }
+  ],
+  "navamsaStartingSign": {
+    "_source": "See references/varga.md -- precomputed table, safe to use directly. Algorithm: degreeInSign / (200/60) [i.e. /3.3333] gives the navamsa part (1-9, ceil); count forward (part-1) signs from the starting sign below.",
+    "Aries": "Aries", "Taurus": "Capricorn", "Gemini": "Libra",
+    "Cancer": "Cancer", "Leo": "Aries", "Virgo": "Capricorn",
+    "Libra": "Libra", "Scorpio": "Cancer", "Sagittarius": "Aries",
+    "Capricorn": "Capricorn", "Aquarius": "Libra", "Pisces": "Cancer"
+  }
+}

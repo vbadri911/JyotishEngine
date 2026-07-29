@@ -1,0 +1,12 @@
+{
+  "_source": "See references/constants.md. Sources disagree on exact values -- this is why these live in config, not code. Reconfirm against whichever reference the validation harness targets before treating as final.",
+  "_note": "The Sun itself is never combust. Retrograde orbs are tighter for Mercury and Venus per common convention.",
+  "orbsDegrees": {
+    "Moon":    { "direct": 12 },
+    "Mars":    { "direct": 17 },
+    "Mercury": { "direct": 14, "retrograde": 12 },
+    "Jupiter": { "direct": 11 },
+    "Venus":   { "direct": 10, "retrograde": 8 },
+    "Saturn":  { "direct": 15 }
+  }
+}

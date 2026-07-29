@@ -1,0 +1,19 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+.env
+.env.local
+
+# Personal/local tool config, not project config
+.idea/
+.claude/settings.local.json
+
+# Ephemeris data files if bundled locally during development
+*.wasm.map
+/data/cities15000.txt
+/data/cities15000.zip
+
+# Never commit anything resembling API keys
+*.key
+*_key.txt

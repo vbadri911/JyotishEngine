@@ -1,0 +1,18 @@
+{
+  "_source": "See references/constants.md. Graha drishti is whole-house, cast forward from a planet's own house -- not degree-based like Western aspects.",
+  "_rule": "Every graha aspects the house 7 positions forward from its own (universal). Mars, Jupiter, and Saturn additionally cast special aspects, listed below as house-offsets counted forward from the planet's own house (e.g. Mars offset 4 means '4th house from Mars's own position').",
+  "universalAspectOffset": 7,
+  "specialAspectOffsets": {
+    "Mars":    [4, 8],
+    "Jupiter": [5, 9],
+    "Saturn":  [3, 10]
+  },
+  "nodesSpecialAspects": {
+    "_note": "Disputed across schools. Some traditions give Rahu/Ketu the same special aspects as Jupiter and Mars respectively (their traditional functional analogues); others give nodes only the universal 7th. Controlled by EngineSettings.nodesHaveSpecialAspects -- default false.",
+    "enabled": false,
+    "offsetsIfEnabled": {
+      "Rahu": [5, 9],
+      "Ketu": [4, 8]
+    }
+  }
+}

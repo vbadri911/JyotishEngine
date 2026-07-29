@@ -1,0 +1,55 @@
+{
+  "_source": "See .claude/skills/jyotish-engine/references/constants.md for full reasoning and caveats. Rahu/Ketu exaltation is genuinely disputed across traditions -- do not treat the values below as settled; they are the commonly-cited convention and must be surfaced as configurable.",
+  "_zoneNote": "For 5 of 7 planets, the exaltation sign never overlaps their own/moolatrikona sign, so the WHOLE sign counts as 'exalted' dignity (the exact degree only sharpens graded strength, not the categorical dignity). Moon (Taurus) and Mercury (Virgo) are exceptions -- BPHS Ch.3 v51 and v53 explicitly bound their exaltation to a narrow zone because the same sign also hosts moolatrikona (and, for Mercury, own sign too). 'zoneEndDegree' is set only for these two; its absence means 'whole sign counts as exalted.' Verified against BPHS primary text (archive.org/stream/BPHSEnglish), not a secondary-source assumption.",
+  "exaltation": {
+    "Sun":     { "sign": "Aries",       "degree": 10 },
+    "Moon":    { "sign": "Taurus",      "degree": 3,  "zoneEndDegree": 3 },
+    "Mars":    { "sign": "Capricorn",   "degree": 28 },
+    "Mercury": { "sign": "Virgo",       "degree": 15, "zoneEndDegree": 15 },
+    "Jupiter": { "sign": "Cancer",      "degree": 5 },
+    "Venus":   { "sign": "Pisces",      "degree": 27 },
+    "Saturn":  { "sign": "Libra",       "degree": 20 },
+    "Rahu":    { "sign": "Taurus",      "degree": null, "disputed": true, "note": "Some traditions use Gemini instead. Make configurable." },
+    "Ketu":    { "sign": "Scorpio",     "degree": null, "disputed": true, "note": "Some traditions use Sagittarius instead. Make configurable." }
+  },
+  "debilitation": {
+    "_rule": "Always the sign opposite exaltation, at the same degree.",
+    "Sun":     { "sign": "Libra",       "degree": 10 },
+    "Moon":    { "sign": "Scorpio",     "degree": 3 },
+    "Mars":    { "sign": "Cancer",      "degree": 28 },
+    "Mercury": { "sign": "Pisces",      "degree": 15 },
+    "Jupiter": { "sign": "Capricorn",   "degree": 5 },
+    "Venus":   { "sign": "Virgo",       "degree": 27 },
+    "Saturn":  { "sign": "Aries",       "degree": 20 },
+    "Rahu":    { "sign": "Scorpio",     "degree": null, "disputed": true },
+    "Ketu":    { "sign": "Taurus",      "degree": null, "disputed": true }
+  },
+  "moolatrikona": {
+    "Sun":     { "sign": "Leo",         "startDegree": 0,  "endDegree": 20 },
+    "Moon":    { "sign": "Taurus",      "startDegree": 3,  "endDegree": 30, "_verified": "BPHS Ch.3 v51: 'after the first 3 degrees of exaltation portion in Taurus, for the Moon the rest is her moolatrikona' -- exact primary-source quote, not a secondary-source estimate." },
+    "Mars":    { "sign": "Aries",       "startDegree": 0,  "endDegree": 12 },
+    "Mercury": { "sign": "Virgo",       "startDegree": 15, "endDegree": 20, "_verified": "BPHS Ch.3 v53: 'first 15 degrees exaltation zone, next 5 degrees moolatrikona, last 10 degrees own house' -- exact primary-source quote." },
+    "Jupiter": { "sign": "Sagittarius", "startDegree": 0,  "endDegree": 10 },
+    "Venus":   { "sign": "Libra",       "startDegree": 0,  "endDegree": 15 },
+    "Saturn":  { "sign": "Aquarius",    "startDegree": 0,  "endDegree": 20 }
+  },
+  "ownSigns": {
+    "Sun":     ["Leo"],
+    "Moon":    ["Cancer"],
+    "Mars":    ["Aries", "Scorpio"],
+    "Mercury": ["Gemini", "Virgo"],
+    "Jupiter": ["Sagittarius", "Pisces"],
+    "Venus":   ["Taurus", "Libra"],
+    "Saturn":  ["Capricorn", "Aquarius"]
+  },
+  "naturalFriendships": {
+    "_note": "Asymmetric by design -- e.g. Sun treats Mercury as neutral, but Mercury treats Sun as a friend. This is correct, not a bug.",
+    "Sun":     { "friends": ["Moon", "Mars", "Jupiter"], "neutral": ["Mercury"], "enemies": ["Venus", "Saturn"] },
+    "Moon":    { "friends": ["Sun", "Mercury"], "neutral": ["Mars", "Jupiter", "Venus", "Saturn"], "enemies": [] },
+    "Mars":    { "friends": ["Sun", "Moon", "Jupiter"], "neutral": ["Venus", "Saturn"], "enemies": ["Mercury"] },
+    "Mercury": { "friends": ["Sun", "Venus"], "neutral": ["Mars", "Jupiter", "Saturn"], "enemies": ["Moon"] },
+    "Jupiter": { "friends": ["Sun", "Moon", "Mars"], "neutral": ["Saturn"], "enemies": ["Mercury", "Venus"] },
+    "Venus":   { "friends": ["Mercury", "Saturn"], "neutral": ["Mars", "Jupiter"], "enemies": ["Sun", "Moon"] },
+    "Saturn":  { "friends": ["Mercury", "Venus"], "neutral": ["Jupiter"], "enemies": ["Sun", "Moon", "Mars"] }
+  }
+}

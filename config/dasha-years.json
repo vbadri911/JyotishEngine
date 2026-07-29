@@ -1,0 +1,25 @@
+{
+  "_source": "See references/dasha.md for full derivation and a worked, cross-checked example.",
+  "_rule": "Fixed 9-lord sequence, always in this order, wrapping indefinitely. The lord whose nakshatra the Moon occupies at birth determines the STARTING lord; the sequence then proceeds in this fixed order. The same order is used for antardasha/pratyantardasha sub-period sequencing, starting from each period's own lord.",
+  "totalYears": 120,
+  "sequence": [
+    { "lord": "Ketu",    "years": 7 },
+    { "lord": "Venus",   "years": 20 },
+    { "lord": "Sun",     "years": 6 },
+    { "lord": "Moon",    "years": 10 },
+    { "lord": "Mars",    "years": 7 },
+    { "lord": "Rahu",    "years": 18 },
+    { "lord": "Jupiter", "years": 16 },
+    { "lord": "Saturn",  "years": 19 },
+    { "lord": "Mercury", "years": 17 }
+  ],
+  "validationCase": {
+    "_note": "Real, previously cross-checked test case -- use as a regression test.",
+    "birthDate": "1983-04-23",
+    "birthTime": "15:30",
+    "moonSiderealLongitudeApprox": 139.267,
+    "moonNakshatra": "Purva Phalguni",
+    "nakshatraLord": "Venus",
+    "expectedBirthBalance": "approximately 11 years, 1 month (reference report states 11y 1m 1d)"
+  }
+}
