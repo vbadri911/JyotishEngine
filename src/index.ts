@@ -4,15 +4,21 @@
  * (Narrative/Document assembly, Phase 5-6, not yet built -- see BACKLOG.md.)
  */
 import { DateTime } from "luxon";
-import type { BirthInput, ChartData, EngineSettings, Graha, PlanetPosition, SignName } from "./types.js";
+import type { BirthInput, ChartData, DashaPeriod, EngineSettings, Finding, Graha, PlanetPosition, SignName } from "./types.js";
 import { DEFAULT_ENGINE_SETTINGS } from "./types.js";
 import { computeRawPositions } from "./engine/ephemeris.js";
 import { resolveLocation } from "./engine/location.js";
 import { assessDignity, assessCombustion } from "./engine/dignity.js";
 import { houseOf, houseLord } from "./engine/houses.js";
-import { nakshatraPositionFromLongitude, computeMahadashaSequence, type DashaComputationResult } from "./engine/dasha.js";
+import {
+  nakshatraPositionFromLongitude,
+  computeMahadashaSequence,
+  findActivePeriod,
+  type DashaComputationResult,
+} from "./engine/dasha.js";
 import { computeConfidenceFlags } from "./engine/confidence.js";
 import { detectAllCoreYogas } from "./rules/yogas.js";
+import { aggregateFindings } from "./findings/index.js";
 import signsData from "../data/signs.json" with { type: "json" };
 
 const SIGN_ORDER = signsData.signs.map((s) => s.name) as SignName[];
@@ -58,7 +64,12 @@ function nakshatraAndPada(absoluteSiderealLongitude: number): { nakshatra: numbe
 export async function computeChart(
   input: BirthInput,
   settings: EngineSettings = DEFAULT_ENGINE_SETTINGS
-): Promise<{ chart: ChartData; findings: ReturnType<typeof detectAllCoreYogas>; dasha: DashaComputationResult }> {
+): Promise<{
+  chart: ChartData;
+  findings: Finding[];
+  dasha: DashaComputationResult;
+  currentDashaPeriod: DashaPeriod | null;
+}> {
   const location = resolveLocation(input);
   if (!location) {
     throw new Error(
@@ -126,10 +137,14 @@ export async function computeChart(
     confidenceFlags: computeConfidenceFlags(input, ascendantSD, planets),
   };
 
-  const findings = detectAllCoreYogas(chart);
+  const yogaFindings = detectAllCoreYogas(chart);
 
   const birthInstantUTC = julianDayUTToUtcISO(raw.julianDayUT);
   const dasha = computeMahadashaSequence(birthInstantUTC, planets.Moon.siderealLongitude);
 
-  return { chart, findings, dasha };
+  const nowISO = DateTime.now().toISO()!;
+  const currentDashaPeriod = findActivePeriod(dasha.mahadashas, nowISO, "pratyantardasha");
+  const findings = aggregateFindings(chart, dasha, yogaFindings, nowISO);
+
+  return { chart, findings, dasha, currentDashaPeriod };
 }

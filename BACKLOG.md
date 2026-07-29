@@ -4,7 +4,7 @@ Open, actionable items not yet resolved. See `DECISIONS.md` for the
 reasoning behind choices already made; this file is what's still open.
 See `README.md` for current status.
 
-## Phase 1, remaining steps
+## Next up
 
 1. **Expand the golden-chart set** to the 30-50 chart target in the project
    spec (§9), covering: cusp Ascendants, polar/equatorial latitudes,
@@ -13,10 +13,12 @@ See `README.md` for current status.
    `tests/location.test.ts`, but not yet via a full golden chart through
    `computeChart()`), DST-affected locations, near-midnight births, leap
    days.
-2. **Narrative/interpretation layer** (Phase 5) and **document assembly**
-   (Phase 6) -- see below, not started. `computeChart()` now produces a full
-   `ChartData` + `Finding[]` for any resolvable birth input; this is the
-   input the narrative layer will consume.
+2. **P7, living document** (dasha/Antardasha/Pratyantardasha transition
+   alerts as `.ics`, versioned regeneration with diffs) -- core MVP scope,
+   not deferred. `computeChart()` now exposes `currentDashaPeriod` and full
+   `mahadashas`/`Finding[]` output; this is the input P7 needs.
+3. **P5 narrative templates** and **P6 document assembly** -- not started,
+   intentionally not begun yet (see `README.md`).
 
 ## Known gaps
 
@@ -67,7 +69,9 @@ secondary source:
 - Dasha systems other than Vimshottari
 - House systems other than Whole Sign; chart formats other than South Indian
 
-## Phase 5-6 (not started)
+## Not started
 
-- Narrative templates (Phase 5)
-- Document assembly, PDF/DOCX (Phase 6)
+- P5 narrative templates
+- P6 document assembly (PDF/DOCX)
+- P7 living document (.ics dasha alerts, versioned regeneration) -- see "Next up" above, core MVP scope
+- P8 languages (`ta`/`hi`/`te` narrative output; type stub exists, no implementation) -- blocked on P5

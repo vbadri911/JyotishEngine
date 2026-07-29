@@ -8,26 +8,33 @@ Built on top of AskSoma as a design reference, not a runtime dependency:
 this project uses its own Swiss Ephemeris-based engine so the calculation
 layer is fully owned, auditable, and free to run indefinitely.
 
-## Status: Phase 1 complete
+## Status against the project's phase plan (P1-P8)
 
-| Piece | Status |
+The authoritative phase plan lives in `docs/requirements-spec.md` (pending --
+not yet added to this repo). Status below is this project's own honest
+read of it, not a copy of that document:
+
+| Phase | Status |
 |---|---|
-| Type definitions (`src/types.ts`) | Done |
-| Dignity assessment (`src/engine/dignity.ts`) | Done, unit-tested |
-| Houses & aspects (`src/engine/houses.ts`) | Done, unit-tested |
-| Navamsa/D9 (`src/engine/varga.ts`) | Done, unit-tested |
-| Vimshottari dasha (`src/engine/dasha.ts`) | Done, unit-tested |
-| Core yoga/dosha detection (`src/rules/yogas.ts`) | Done (5 yogas + Mangal Dosha), unit-tested |
-| Ephemeris integration (`src/engine/ephemeris.ts`) | Done, via `@swisseph/browser`. |
-| Geocoding data (`src/engine/geocoding.ts`, `data/cities.json`) | Mostly done — city/country matching works; one known gap (see `BACKLOG.md`). |
-| Historical timezone resolution (`src/engine/timezone.ts`, `src/engine/location.ts`) | Done, unit-tested (pre-1906 India, plus Bombay/Calcutta's extended local-time windows through 1955/1948). |
-| Confidence checks (`src/engine/confidence.ts`) | Done -- implements SKILL.md's "Confidence check" table. |
-| Chart pipeline (`src/index.ts`, `computeChart()`) | Done -- geocoding through yoga detection wired end to end. |
-| Golden-chart validation | Full `computeChart()` pipeline run against real ephemeris output — 5/9 planets + Ascendant within stated longitude tolerance, all 6 implemented yoga/dosha classifications match exactly (see `BACKLOG.md` for the rest). |
-| Narrative templates | Not started (Phase 5) |
-| Document assembly (PDF/DOCX) | Not started (Phase 6) |
+| P1 Ephemeris | **Done.** Real Swiss Ephemeris (`@swisseph/browser`), geocoding (one known gap, `BACKLOG.md`), historical timezone (pre-1906 India, Bombay/Calcutta extended local time through 1955/1948, WWII windows). |
+| P2 Dasha | **Done.** Full Vimshottari math (`src/engine/dasha.ts`) -- mahadasha/antardasha/pratyantardasha, wired into `computeChart()`, verified against real ephemeris. |
+| P3 Rules engine | **Partial.** Dignity, houses, combustion, D9 all done and verified. Yoga/dosha detection (`src/rules/yogas.ts`) covers a simplified subset (5 Pancha Mahapurusha yogas + Gajakesari + Kemadruma + Mangal Dosha) -- general Raja Yoga, Nabhasa yogas, Kala Sarpa Dosha, and Sade Sati are not implemented (`BACKLOG.md`). |
+| P4 Findings/confidence | **Done.** `src/findings/index.ts` converts dignity, house-lord, combustion, and current-dasha-period facts into `Finding` objects per `interpretation.md`'s schema and domain mapping, combined with yoga findings in `computeChart()`'s output. Confidence checks (`src/engine/confidence.ts`) implement all 5 rows of SKILL.md's table. |
+| P5 Narrative templates | Not started. |
+| P6 Document assembly (PDF/DOCX) | Not started. |
+| P7 Living document (dasha/Antardasha/Pratyantardasha `.ics` alerts, versioned regeneration with diffs) | Not started -- core MVP scope, not a stretch goal. |
+| P8 Languages | Not started; blocked on P5 existing in English first. |
 
-Open gaps, deferred work, and remaining Phase 1 steps are tracked in
+Underlying pure-logic modules (all done, unit-tested): dignity
+(`src/engine/dignity.ts`), houses & aspects (`src/engine/houses.ts`),
+Navamsa/D9 (`src/engine/varga.ts`), type definitions (`src/types.ts`).
+
+Golden-chart validation: full `computeChart()` pipeline run against real
+ephemeris output -- 5/9 planets + Ascendant within stated longitude
+tolerance, all 6 implemented yoga/dosha classifications match exactly, full
+fixture sweep complete (see `BACKLOG.md` for the remaining known gaps).
+
+Open gaps, deferred work, and next steps are tracked in
 [`BACKLOG.md`](BACKLOG.md), not here. Decisions and their reasoning are in
 [`DECISIONS.md`](DECISIONS.md).
 
@@ -52,9 +59,10 @@ pipeline (`tests/golden-charts/`) — one known-and-documented failure remains
 
 ## Next steps
 
-Phase 1 is functionally complete. See [`BACKLOG.md`](BACKLOG.md) for what's
-still open (expanding the golden-chart set, the geocoding admin1 gap) and
-Phase 5-6 (narrative templates, document assembly) for what's next.
+P1-P4 are functionally complete (P3's yoga coverage intentionally partial --
+see above). See [`BACKLOG.md`](BACKLOG.md) for what's still open. P5-P8 are
+not started; P7 (the living-document `.ics`/versioned-regeneration feature)
+is core MVP scope, not deferred.
 
 ## License
 
