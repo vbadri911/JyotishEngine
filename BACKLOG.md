@@ -13,13 +13,18 @@ See `README.md` for current status.
    level in `tests/timezone.test.ts`/`tests/location.test.ts`, but not yet
    via a full golden chart through `computeChart()`), DST-affected
    locations, near-midnight births, leap days.
-2. **P7, living document** (§9): `.ics` export of every dasha/Antardasha/
-   Pratyantardasha transition **plus Jupiter/Saturn ingresses** (not yet
-   scoped into anything built -- transit positions aren't computed at all
-   yet, only natal), versioned regeneration with diffs -- core MVP scope,
-   not deferred. `computeChart()` now exposes `currentDashaPeriod` and full
-   `mahadashas`/`Finding[]` output; dasha-side input for P7 exists, the
-   Jupiter/Saturn transit side does not yet.
+2. **P7b: Jupiter/Saturn transit ingress detection** (§9) -- not started.
+   P7a is done (below); do not start P7b until it's been reviewed. Not just
+   an `.ics` packaging detail -- needs a genuinely new engine capability the
+   codebase doesn't have: forward-searching for the date a *transiting*
+   planet's sidereal longitude next crosses a sign boundary. Everything
+   built so far computes a single instant's positions; this needs
+   root-finding over the ephemeris (e.g. daily sampling to bracket the
+   sign-change window, then binary search within it to a stated precision
+   target -- pick and document the target, e.g. to the hour or the day,
+   before implementing, rather than letting sampling granularity silently
+   define the precision). Versioned regeneration with diffs (also part of
+   §9) not yet scoped into either P7a or P7b -- revisit once P7b exists.
 3. **P5 narrative templates** and **P6 document assembly** -- not started,
    intentionally not begun yet (see `README.md`).
 
@@ -83,5 +88,6 @@ reconstructing from memory or a secondary source:
 
 - P5 narrative templates
 - P6 document assembly (PDF/DOCX)
-- P7 living document (.ics dasha alerts + Jupiter/Saturn ingresses, versioned regeneration) -- see "Next up" above, core MVP scope; transit computation (Jupiter/Saturn's current/future position) doesn't exist yet, only natal
+- P7b Jupiter/Saturn transit ingress detection (see "Next up" above) -- needs new root-finding capability, transit computation doesn't exist yet, only natal (P7a, the dasha `.ics` export, is done -- `src/export/`)
+- P7's versioned-regeneration-with-diffs requirement -- not yet scoped into either P7a or P7b
 - P8 languages (`ta`/`hi`/`te` narrative output; type stub exists, no implementation) -- blocked on P5

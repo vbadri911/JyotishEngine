@@ -22,7 +22,7 @@ Status below is this project's own honest read of it, not a copy:
 | P4 Findings/confidence | **Done.** `src/findings/index.ts` converts dignity, house-lord, combustion, and current-dasha-period facts into `Finding` objects per `interpretation.md`'s schema and domain mapping, combined with yoga findings in `computeChart()`'s output. Confidence checks (`src/engine/confidence.ts`) implement all 5 rows of SKILL.md's table. |
 | P5 Narrative templates | Not started. |
 | P6 Document assembly (PDF/DOCX) | Not started. |
-| P7 Living document (dasha/Antardasha/Pratyantardasha `.ics` alerts, versioned regeneration with diffs) | Not started -- core MVP scope, not a stretch goal. |
+| P7 Living document | Split into P7a and P7b (`BACKLOG.md`). **P7a done**: `.ics` export of dasha/Antardasha/Pratyantardasha transitions (`src/export/ics.ts`, `src/export/dashaCalendar.ts`) -- RFC 5545 compliant (line folding, text escaping, UTC normalization), tested against real `computeChart()` output. **P7b not started**: Jupiter/Saturn transit ingress detection needs a new root-finding capability (forward-search for a sign-boundary crossing), not yet designed. Versioned regeneration with diffs not yet scoped into either. |
 | P8 Languages | Not started; blocked on P5 existing in English first. |
 
 Underlying pure-logic modules (all done, unit-tested): dignity
