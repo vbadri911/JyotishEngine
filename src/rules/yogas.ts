@@ -10,6 +10,7 @@
  * document; it does not restate the reasoning inline beyond brief comments.
  */
 import type { ChartData, Finding, Graha, YogaClassification } from "../types.js";
+import { ordinal } from "../util/ordinal.js";
 
 const KENDRAS = [1, 4, 7, 10];
 
@@ -49,13 +50,13 @@ export function detectMahapurushaYogas(chart: ChartData): Finding[] {
     let statement: string;
     if (dignified && inKendra) {
       classification = "EXACT";
-      statement = `${name} Yoga: ${graha} is ${planet.dignity} in the ${planet.house}th house, a Kendra.`;
+      statement = `${name} Yoga: ${graha} is ${planet.dignity} in the ${ordinal(planet.house)} house, a Kendra.`;
     } else if (dignified && !inKendra) {
       classification = "STRONG_NOT_TEXTBOOK";
-      statement = `${graha} is ${planet.dignity} in the ${planet.house}th house -- a strong placement, but not ${name} Yoga since the ${planet.house}th is not a Kendra.`;
+      statement = `${graha} is ${planet.dignity} in the ${ordinal(planet.house)} house -- a strong placement, but not ${name} Yoga since the ${ordinal(planet.house)} is not a Kendra.`;
     } else {
       classification = "ABSENT";
-      statement = `${name} Yoga: not present. ${graha} is ${planet.dignity} in the ${planet.house}th house.`;
+      statement = `${name} Yoga: not present. ${graha} is ${planet.dignity} in the ${ordinal(planet.house)} house.`;
     }
 
     findings.push({
@@ -189,13 +190,13 @@ export function detectMangalDosha(chart: ChartData): Finding {
   let statement: string;
   if (!inDoshaHouse) {
     classification = "ABSENT";
-    statement = `Mangal Dosha (Lagna-based): absent. Mars is in the ${mars.house}th house, not one of the dosha-triggering houses (1, 2, 4, 7, 8, 12).`;
+    statement = `Mangal Dosha (Lagna-based): absent. Mars is in the ${ordinal(mars.house)} house, not one of the dosha-triggering houses (1, 2, 4, 7, 8, 12).`;
   } else if (marsOwnOrExalted) {
     classification = "PRESENT_CANCELLED";
     statement = `Mangal Dosha (Lagna-based): technically triggered (Mars in house ${mars.house}), but a standard exemption applies -- Mars is ${mars.dignity} there.`;
   } else {
     classification = "EXACT";
-    statement = `Mangal Dosha (Lagna-based): present. Mars is in the ${mars.house}th house from the Lagna. Note this dosha's exemption criteria vary meaningfully by regional tradition -- see references/yogas.md before presenting this as a single universal verdict.`;
+    statement = `Mangal Dosha (Lagna-based): present. Mars is in the ${ordinal(mars.house)} house from the Lagna. Note this dosha's exemption criteria vary meaningfully by regional tradition -- see references/yogas.md before presenting this as a single universal verdict.`;
   }
 
   return {

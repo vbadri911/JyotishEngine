@@ -83,6 +83,21 @@ describe("detectMahapurushaYogas (reference chart)", () => {
   it("Hamsa (Jupiter, friend dignity, not exalted/own) is ABSENT", () => {
     expect(byName("hamsa")?.classification).toBe("ABSENT");
   });
+
+  // Statement text, not just structure -- these previously only asserted on
+  // .classification, which let a live ordinal-suffix bug ("3th house" instead
+  // of "3rd") sit undetected. Saturn's house is 3 specifically because that's
+  // the one house number in this reference chart where naive `${n}th` and a
+  // correct ordinal diverge (see DECISIONS.md).
+  it("Sasa's statement renders '3rd house', not '3th house'", () => {
+    expect(byName("sasa")?.statement).toContain("3rd house");
+    expect(byName("sasa")?.statement).not.toContain("3th");
+  });
+  it("no Mahapurusha statement contains a malformed ordinal (1th/2th/3th)", () => {
+    for (const f of findings) {
+      expect(f.statement).not.toMatch(/\b1th\b|\b2th\b|\b3th\b/);
+    }
+  });
 });
 
 describe("detectGajakesariYoga (reference chart: Jupiter in Scorpio, Moon in Leo)", () => {
@@ -103,5 +118,24 @@ describe("detectMangalDosha (reference chart: Mars in house 9, not a dosha house
   it("is ABSENT", () => {
     const finding = detectMangalDosha(buildReferenceChart());
     expect(finding.classification).toBe("ABSENT");
+  });
+
+  it("statement uses a real ordinal (9th), not just something that happens to end in 'th'", () => {
+    const finding = detectMangalDosha(buildReferenceChart());
+    expect(finding.statement).toContain("9th house");
+  });
+
+  it("statement renders '3rd house', not '3th house', for a Mars-in-house-3 (non-dosha-house) variant", () => {
+    // house 9's "9th" is correct by coincidence either way (9%10=9); house 3 actually
+    // distinguishes a naive `${n}th` template from a real ordinal function. House 3
+    // isn't a dosha-triggering house, so this stays in the ABSENT branch, whose
+    // statement is the one that renders an ordinal (the PRESENT_CANCELLED branch's
+    // text doesn't use one at all).
+    const chart = buildReferenceChart();
+    chart.planets.Mars = { ...chart.planets.Mars, house: 3 };
+    const finding = detectMangalDosha(chart);
+    expect(finding.classification).toBe("ABSENT");
+    expect(finding.statement).toContain("3rd house");
+    expect(finding.statement).not.toContain("3th");
   });
 });

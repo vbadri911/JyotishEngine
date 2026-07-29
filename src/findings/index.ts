@@ -21,6 +21,7 @@ import { DateTime } from "luxon";
 import type { ChartData, Domain, Finding, Graha, Polarity } from "../types.js";
 import type { DashaComputationResult } from "../engine/dasha.js";
 import { findActivePeriod } from "../engine/dasha.js";
+import { ordinal } from "../util/ordinal.js";
 
 let counter = 0;
 function nextId(prefix: string): string {
@@ -53,9 +54,12 @@ const GRAHA_DOMAINS: Partial<Record<Graha, Domain[]>> = {
 
 /**
  * Standalone dignity findings for Sun/Saturn/Jupiter/Venus (see module doc
- * for why only these four) plus the Lagna lord specifically (interpretation.md
- * names "Lagna lord's dignity" as a Health factor, independent of house).
- * Only dignities strong enough to be individually meaningful --
+ * for why only these four) plus the Lagna lord specifically -- interpretation.md
+ * names "Lagna lord's dignity" under Health AND "Lagna lord's placement" under
+ * Purpose (two separate table rows, same planet), and its own worked example
+ * is explicit that both apply at once: "an exalted Lagna-lord Sun in the 9th
+ * feeds both Career and Purpose" -- which is this exact golden chart. Only
+ * dignities strong enough to be individually meaningful --
  * exalted/own/moolatrikona/debilitated. Friend/neutral/enemy are real but
  * weak signals, better left to compound (house-lord) findings than reported
  * as standalone noise -- "length follows data," not exhaustive.
@@ -68,7 +72,10 @@ export function dignityFindings(chart: ChartData): Finding[] {
     if (!NOTABLE_DIGNITIES.has(planet.dignity)) continue;
 
     const domains = new Set<Domain>(GRAHA_DOMAINS[planet.graha] ?? []);
-    if (planet.graha === lagnaLord) domains.add("health");
+    if (planet.graha === lagnaLord) {
+      domains.add("health");
+      domains.add("purpose");
+    }
     if (domains.size === 0) continue; // not one of the table's explicitly mapped planets, and not the Lagna lord
 
     findings.push({
@@ -102,16 +109,6 @@ const HOUSE_DOMAINS: Partial<Record<number, Domain[]>> = {
   10: ["career"],
   11: ["wealth"],
 };
-
-function ordinal(n: number): string {
-  if (n % 100 >= 11 && n % 100 <= 13) return `${n}th`;
-  switch (n % 10) {
-    case 1: return `${n}st`;
-    case 2: return `${n}nd`;
-    case 3: return `${n}rd`;
-    default: return `${n}th`;
-  }
-}
 
 /**
  * "{N}th lord ({graha}) in {sign}, house {placedInHouse}" for every

@@ -184,7 +184,17 @@ describe("aggregateFindings", () => {
   });
 });
 
-describe("computeChart() surfaces the currently-active dasha period and full findings", () => {
+/**
+ * Everything above this point tests dignityFindings()/houseLordFindings()/
+ * combustionFindings() against a HAND-BUILT mock chart, not real computeChart()
+ * output. That's a real, worth-naming distinction: the mock encodes the
+ * fixture's already-known expected values, not independently computed
+ * positions -- if computeChart()'s real pipeline diverged from the mock, none
+ * of the tests above would catch it. This block runs the real pipeline via
+ * computeChart() for every specific case interpretation.md names by example,
+ * not just Venus.
+ */
+describe("computeChart() surfaces the currently-active dasha period and full findings (real pipeline, not the mock)", () => {
   it("currentDashaPeriod is populated (not just reachable via a separate exported function)", async () => {
     const { currentDashaPeriod, findings } = await computeChart(
       { date: "1983-04-23", time: "15:30", placeText: "Chennai, Tamil Nadu, India", precision: "exact_from_record" },
@@ -193,6 +203,57 @@ describe("computeChart() surfaces the currently-active dasha period and full fin
     expect(currentDashaPeriod).not.toBeNull();
     expect(currentDashaPeriod!.level).toBe("pratyantardasha");
     expect(findings.some((f) => f.domain.includes("timing"))).toBe(true);
-    expect(findings.some((f) => f.statement.includes("own house"))).toBe(true); // Venus, 10th lord
+  });
+
+  it("Sun's dignity finding (exalted, Lagna lord, house 9) is tagged career+health+purpose -- interpretation.md's own worked example, checked against real positions", async () => {
+    const { findings } = await computeChart(
+      { date: "1983-04-23", time: "15:30", placeText: "Chennai, Tamil Nadu, India", precision: "exact_from_record" },
+      DEFAULT_ENGINE_SETTINGS
+    );
+    const sun = findings.find((f) => f.statement.startsWith("Sun") && f.statement.includes("exalted"));
+    expect(sun).toBeDefined();
+    expect(sun!.domain).toEqual(expect.arrayContaining(["career", "health", "purpose"]));
+    expect(sun!.statement).toContain("Lagna lord");
+  });
+
+  it("Mercury correctly produces NO combustion finding -- real separation (~19.67 deg) exceeds the combustion orb", async () => {
+    // NOT the same claim as "combustionFindings() works" -- that's tested in isolation
+    // above, against a mock where combust is forced true. This golden chart doesn't
+    // actually have any combust planet in real output: the fixture's own original
+    // combust:true for Mercury was itself wrong and was corrected (DECISIONS.md) once
+    // real ephemeris confirmed the true ~19.67 deg separation exceeds the 14 deg orb.
+    // This test exists so that fact stays pinned -- if it ever flips to "defined",
+    // that's either a real astronomical change (impossible, fixed birth data) or a
+    // regression in assessCombustion()/the orb config, worth investigating either way.
+    const { chart, findings } = await computeChart(
+      { date: "1983-04-23", time: "15:30", placeText: "Chennai, Tamil Nadu, India", precision: "exact_from_record" },
+      DEFAULT_ENGINE_SETTINGS
+    );
+    expect(chart.planets.Mercury.combust).toBe(false);
+    expect(chart.planets.Mercury.distanceFromSunDegrees).toBeCloseTo(19.67, 1);
+    expect(findings.find((f) => f.statement.startsWith("Mercury") && f.statement.includes("combust"))).toBeUndefined();
+  });
+
+  it("Venus's house-lord finding specifically (not just 'some finding') shows the 10th lord in its own house", async () => {
+    const { findings } = await computeChart(
+      { date: "1983-04-23", time: "15:30", placeText: "Chennai, Tamil Nadu, India", precision: "exact_from_record" },
+      DEFAULT_ENGINE_SETTINGS
+    );
+    const tenth = findings.find((f) => f.statement.startsWith("10th lord"));
+    expect(tenth).toBeDefined();
+    expect(tenth!.statement).toContain("Venus");
+    expect(tenth!.statement).toContain("own house");
+  });
+
+  it("no finding statement in the real golden chart contains a malformed ordinal", async () => {
+    const { findings } = await computeChart(
+      { date: "1983-04-23", time: "15:30", placeText: "Chennai, Tamil Nadu, India", precision: "exact_from_record" },
+      DEFAULT_ENGINE_SETTINGS
+    );
+    // House numbers in this project only ever range 1-12, so this is sufficient --
+    // 11th/12th are correct as-is, "1th"/"2th"/"3th" are always wrong.
+    for (const f of findings) {
+      expect(f.statement, f.statement).not.toMatch(/\b[123]th\b/);
+    }
   });
 });
