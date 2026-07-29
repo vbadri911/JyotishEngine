@@ -18,13 +18,21 @@ See `README.md` for current status.
    an `.ics` packaging detail -- needs a genuinely new engine capability the
    codebase doesn't have: forward-searching for the date a *transiting*
    planet's sidereal longitude next crosses a sign boundary. Everything
-   built so far computes a single instant's positions; this needs
-   root-finding over the ephemeris (e.g. daily sampling to bracket the
-   sign-change window, then binary search within it to a stated precision
-   target -- pick and document the target, e.g. to the hour or the day,
-   before implementing, rather than letting sampling granularity silently
-   define the precision). Versioned regeneration with diffs (also part of
-   §9) not yet scoped into either P7a or P7b -- revisit once P7b exists.
+   built so far computes a single instant's positions.
+   - **Required design, before any implementation code is written:**
+     daily-sample the ephemeris to bracket the sign-change window (the pair
+     of consecutive sampled days the crossing falls between), then refine
+     *within* that bracketed window (e.g. binary search) to a stated
+     precision target. Do not let the sampling interval silently become the
+     de facto precision by skipping the refinement step.
+   - **The precision target itself (e.g. to the hour, to the day) must be
+     decided explicitly and logged as its own dated `DECISIONS.md` entry
+     *before* implementation starts** -- not decided implicitly by whatever
+     interval the first working version happens to sample at, and not left
+     for the code/tests to define after the fact. Pick it, write down why,
+     then build to it.
+   Versioned regeneration with diffs (also part of §9) not yet scoped into
+   either P7a or P7b -- revisit once P7b exists.
 3. **P5 narrative templates** and **P6 document assembly** -- not started,
    intentionally not begun yet (see `README.md`).
 
