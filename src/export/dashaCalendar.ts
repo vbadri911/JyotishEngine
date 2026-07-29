@@ -17,7 +17,7 @@ import { DateTime } from "luxon";
 import type { DashaPeriod } from "../types.js";
 import type { DashaComputationResult } from "../engine/dasha.js";
 import { computeAntardashas, computePratyantardashas, findActivePeriod } from "../engine/dasha.js";
-import { buildICalendar, type CalendarEvent } from "./ics.js";
+import { buildICalendar, toICalDateTimeUTC, type CalendarEvent } from "./ics.js";
 import type { EngineSettings } from "../types.js";
 
 function summaryFor(period: DashaPeriod): string {
@@ -33,20 +33,31 @@ function summaryFor(period: DashaPeriod): string {
   return `${period.lord} Pratyantardasha (${ad.lord} Antardasha / ${md.lord} Mahadasha)`;
 }
 
-/** UTC, deterministic regardless of the running environment's local timezone --
- *  period.start/end are ISO strings that carry whatever offset Luxon's default
- *  toISO() picked at computation time (system-local, not UTC; see DECISIONS.md's
- *  julianDayUTToUtcISO() note for the same underlying Luxon behavior), so
- *  interpolating them directly into human-readable text would make DESCRIPTION
- *  non-reproducible across environments even though DTSTART/DTEND (built via
- *  ics.ts's own UTC normalization) already are. */
+/**
+ * `period.start`/`.end` are ISO strings that carry whatever offset Luxon's
+ * default `toISO()` picked at computation time -- the RUNNING ENVIRONMENT's
+ * local offset (see DECISIONS.md's `julianDayUTToUtcISO()` note for the same
+ * underlying Luxon behavior), NOT a property of the chart or birth location.
+ * That offset also isn't even stable per machine -- it varies by historical
+ * DST rules for the specific date in question. Every field derived from
+ * these two strings for output MUST go through UTC normalization
+ * (`toICalDateTimeUTC` for machine-readable identifiers, `formatUTC` below
+ * for human-readable text) -- never interpolate `period.start`/`.end`
+ * directly. This bit twice already (DESCRIPTION, then UID) before being
+ * swept properly; see DECISIONS.md.
+ */
 function formatUTC(iso: string): string {
   return DateTime.fromISO(iso).toUTC().toFormat("yyyy-MM-dd HH:mm 'UTC'");
 }
 
 function toEvent(period: DashaPeriod): CalendarEvent {
   return {
-    uid: `${period.level}-${period.lord}-${period.start}@jyotish-engine.local`,
+    // UTC-normalized, not period.start directly -- a UID built from the raw
+    // local-offset string would vary by generating machine/DST for logically
+    // identical periods, breaking calendar apps' "same event" de-duplication
+    // on re-import (the entire point of the "regenerate and re-import" model
+    // P7 is built around). Matches DTSTART's own format for direct legibility.
+    uid: `${period.level}-${period.lord}-${toICalDateTimeUTC(period.start)}@jyotish-engine.local`,
     startISO: period.start,
     endISO: period.end,
     summary: summaryFor(period),

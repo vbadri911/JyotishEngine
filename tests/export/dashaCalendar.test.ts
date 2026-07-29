@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeMahadashaSequence } from "../../src/engine/dasha.js";
+import { computeMahadashaSequence, type DashaComputationResult } from "../../src/engine/dasha.js";
 import { dashaCalendarEvents, exportDashaICalendar } from "../../src/export/dashaCalendar.js";
 import { DEFAULT_ENGINE_SETTINGS } from "../../src/types.js";
 
@@ -55,6 +55,47 @@ describe("dashaCalendarEvents", () => {
     const events = dashaCalendarEvents(dasha, { nowISO: "2020-01-01T00:00:00.000Z" });
     const uids = new Set(events.map((e) => e.uid));
     expect(uids.size).toBe(events.length);
+  });
+});
+
+describe("UID is UTC-normalized, not dependent on the generating machine's local timezone", () => {
+  // Regression test for a real bug: UID used to interpolate period.start raw, which
+  // carries whatever offset Luxon's toISO() picked at computation time (the running
+  // environment's local zone, not a chart property) -- so the same chart, regenerated
+  // on a different machine, produced different UIDs for logically identical periods,
+  // breaking calendar apps' de-duplication on re-import. See DECISIONS.md.
+  function buildFakeDasha(startISO: string, endISO: string): DashaComputationResult {
+    return {
+      birthBalance: { lord: "Venus", balanceYears: 11.08 },
+      mahadashas: [{ lord: "Venus", level: "mahadasha", start: startISO, end: endISO }],
+    };
+  }
+
+  it("produces an identical UID for the same absolute instant expressed with three different ISO offsets", () => {
+    // All three strings below denote the exact same instant -- simulating three
+    // machines in three different timezones computing the identical chart.
+    const asUTC = "1974-05-22T00:42:41.000Z";
+    const asMinus7 = "1974-05-21T17:42:41.000-07:00";
+    const asPlus530 = "1974-05-22T06:12:41.000+05:30";
+    const end = "1994-05-22T00:42:41.000Z";
+
+    const uidFor = (startISO: string) =>
+      dashaCalendarEvents(buildFakeDasha(startISO, end), { nowISO: "1900-01-01T00:00:00.000Z" }).find((e) =>
+        e.uid.startsWith("mahadasha-")
+      )!.uid;
+
+    const uidUTC = uidFor(asUTC);
+    expect(uidFor(asMinus7)).toBe(uidUTC);
+    expect(uidFor(asPlus530)).toBe(uidUTC);
+  });
+
+  it("no event's UID contains a raw non-Z timezone offset -- only the compact UTC form", () => {
+    const events = dashaCalendarEvents(dasha, { nowISO: "2020-01-01T00:00:00.000Z" });
+    expect(events.length).toBeGreaterThan(0);
+    for (const event of events) {
+      expect(event.uid, event.uid).not.toMatch(/[+-]\d{2}:?\d{2}@/); // e.g. "-07:00@" or "+0530@"
+      expect(event.uid, event.uid).toMatch(/\d{8}T\d{6}Z@jyotish-engine\.local$/);
+    }
   });
 });
 

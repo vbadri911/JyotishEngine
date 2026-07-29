@@ -30,8 +30,14 @@ export interface CalendarEvent {
 const CRLF = "\r\n";
 const FOLD_LIMIT_OCTETS = 75;
 
-/** UTC "Z" datetime in RFC 5545's DATE-TIME form: YYYYMMDDTHHMMSSZ. */
-function toICalDateTimeUTC(iso: string): string {
+/**
+ * UTC "Z" datetime in RFC 5545's DATE-TIME form: YYYYMMDDTHHMMSSZ. Exported
+ * so callers building derived identifiers (e.g. UIDs) from a period's start/
+ * end can reuse this exact normalization instead of interpolating a raw ISO
+ * string -- see DECISIONS.md for why that specifically went wrong once
+ * already (UID construction in dashaCalendar.ts).
+ */
+export function toICalDateTimeUTC(iso: string): string {
   return DateTime.fromISO(iso).toUTC().toFormat("yyyyMMdd'T'HHmmss'Z'");
 }
 
