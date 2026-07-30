@@ -13,30 +13,80 @@ See `README.md` for current status.
    level in `tests/timezone.test.ts`/`tests/location.test.ts`, but not yet
    via a full golden chart through `computeChart()`), DST-affected
    locations, near-midnight births, leap days.
-2. **P7b: Jupiter/Saturn transit ingress detection** (§9) -- not started.
-   P7a is done (below); do not start P7b until it's been reviewed. Not just
-   an `.ics` packaging detail -- needs a genuinely new engine capability the
-   codebase doesn't have: forward-searching for the date a *transiting*
-   planet's sidereal longitude next crosses a sign boundary. Everything
-   built so far computes a single instant's positions.
-   - **Required design, before any implementation code is written:**
-     daily-sample the ephemeris to bracket the sign-change window (the pair
-     of consecutive sampled days the crossing falls between), then refine
-     *within* that bracketed window (e.g. binary search) to a stated
-     precision target. Do not let the sampling interval silently become the
-     de facto precision by skipping the refinement step.
-   - **The precision target itself (e.g. to the hour, to the day) must be
-     decided explicitly and logged as its own dated `DECISIONS.md` entry
-     *before* implementation starts** -- not decided implicitly by whatever
-     interval the first working version happens to sample at, and not left
-     for the code/tests to define after the fact. Pick it, write down why,
-     then build to it.
+2. **P7b: Jupiter/Saturn transit ingress detection (§9) -- search primitive and
+   `.ics` export both done.** `src/engine/transit.ts`: `findNextSignCrossing()`
+   is the generic bracket-then-refine root finder (dependency-injected
+   longitude function, so the algorithm is unit-tested with a fast synthetic
+   function, no WASM -- `tests/transit.test.ts`); `findNextSignIngress()`/
+   `findUpcomingSignIngresses()` wrap it for the real ephemeris, Jupiter/Saturn
+   only. Precision target (nearest UTC calendar day) decided and logged in
+   `DECISIONS.md` before implementation, per the gate that used to be here.
+   Validated against real sidereal (Lahiri) transit anchors from multiple
+   independent sources (not a primary ephemeris rerun) -- all five checked
+   events landed within roughly an hour, and the search correctly reproduced
+   both Jupiter's and Saturn's known retrograde preview/permanent-ingress
+   patterns without being told to expect them (see `DECISIONS.md`, two
+   2026-07-29 entries). `src/export/transitCalendar.ts` maps its output onto
+   `ics.ts`'s existing generic builder unchanged: a rolling window of the next
+   3 ingresses per planet from a given (default: real "now") instant, each
+   represented as a full-UTC-day timed event. **Not yet done:** wiring into
+   `computeChart()`'s own output, and a combined dasha+transit single-file
+   export (currently two separate `.ics` files/functions -- trivial to merge
+   later since both expose a plain `CalendarEvent[]`-returning function, not
+   done since it wasn't asked for and transits aren't birth-chart-specific
+   the way dasha is).
    Versioned regeneration with diffs (also part of §9) not yet scoped into
-   either P7a or P7b -- revisit once P7b exists.
-3. **P5 narrative templates** and **P6 document assembly** -- not started,
-   intentionally not begun yet (see `README.md`).
+   either P7a or P7b.
+3. **P5 narrative templates -- Career, Purpose, and Relationships done;
+   wealth/health/timing not started.** `src/narrative/render.ts` is a
+   domain-agnostic renderer: quotes `Finding.statement` verbatim (never
+   regenerates a fact -- see `DECISIONS.md` for why this departs from
+   requirements-spec.md §7's illustrated `rule`-keyed template shape),
+   semantically de-duplicates findings that describe the same underlying
+   fact via shared `planets.X.dignity` evidence (explicit priority chain,
+   directly tested against a controlled 4-way collision, not just incidental
+   real-chart cases), and renders `full` depth as `overview`'s own core
+   content plus a continuation of genuinely new findings (closing note
+   appended once at the true end -- see `DECISIONS.md` for a precision fix
+   found while extending to Purpose). Mahapurusha/Kemadruma domain tags were
+   audited and corrected against `constants.md`'s karaka table (see
+   `DECISIONS.md`) after Malavya's original blanket ["purpose","career"] tag
+   was caught reading as inaccurate in real Purpose prose. Validated against
+   the golden chart (Career: rich/all-supportive; Purpose: a real "mixed"
+   tier; Relationships: a real "strong" tier with a genuine EXACT yoga) and
+   hand-built fixtures for cases the golden chart can't exercise
+   (`tests/narrative/fixtures.ts`: weak/all-challenging, mixed, "overview
+   already exhausts everything", and -- for Relationships specifically, one
+   of interpretation.md's named SENSITIVE domains -- a real triggered Mangal
+   Dosha, verified to never drift into marriage-failure language and to use
+   the required "partner's own chart carries proportional weight" framing).
+   Closing notes support an optional `conditionalClosingNotes` mechanism
+   (topic-scoped clauses that only fire when a QUOTED finding actually
+   matches that topic's trigger patterns, checked against what's genuinely in
+   the text at that depth -- not the full domain data) after Relationships'
+   original single fixed closing note was found to append its children-topic
+   caveat even to renders with no children-related content at all (see
+   `DECISIONS.md`). Health will need the same discipline (a body-part/illness
+   topic split) when it's built. **Next**: templates for wealth/health/timing
+   -- same renderer, new JSON files only. **P6 document assembly** -- not
+   started, blocked on P5 existing for
+   more than one domain.
 
 ## Known gaps
+
+- **Bhadra Yoga (Mercury) domain tag: a real, if thin, argument for wealth+relationships not acted on.** Currently untagged (no domain), matching the per-graha consistency rule the whole Mahapurusha domain-tag audit rests on (Mercury isn't a named karaka in interpretation.md's table). But BPHS Ch. 75's actual verses (fetched by the user directly, not reachable by this project's own tooling) specifically mention wealth shared with friends and a happy life with "wife and children" for Bhadra -- more textually specific than the generic rulership praise shared by all five Mahapurusha yogas. Deliberately not acted on: retagging Bhadra alone would break the uniform per-graha rule (Mercury's own dignity finding would still carry no domain, creating an unexplained special case), and it hasn't been checked whether this wealth/family language is actually differentiating for Bhadra specifically or just more shared praise-language across the other four yogas' own verses (the same trap the "ruler of region" line turned out to be). See `DECISIONS.md` (2026-07-29, "Follow-up on the audit above") for the full reasoning. Revisit only if a future pass reads all five yogas' verses side by side specifically to check this.
+
+- **Kemadruma Yoga: only one of `yogas.md`'s two listed cancellations is
+  checked.** `detectKemadrumaYoga()` (`src/rules/yogas.ts`) checks the
+  Moon-in-Kendra-from-Lagna cancellation only. The second listed
+  cancellation (Moon conjunct/aspected by a benefic -- Jupiter/Mercury/Venus)
+  isn't implemented. Some real EXACT classifications may in fact be
+  cancelled under a tradition that also honors that second check. Previously
+  flagged only inside the Finding's own reader-facing statement text ("consider
+  checking benefic aspects..."), which was itself a bug (see `DECISIONS.md` --
+  that phrasing addressed whoever audits the system, not the person reading
+  their own chart, and got quoted verbatim into real output). Moved to this
+  backlog item and a code comment; the statement itself no longer mentions it.
 
 - **Geocoding: no state/province (admin1) disambiguation.**
   `geocodePlace()` (`src/engine/geocoding.ts`) falls back to population
@@ -94,8 +144,8 @@ reconstructing from memory or a secondary source:
 
 ## Not started
 
-- P5 narrative templates
+- P5 narrative templates for wealth/health/timing (Career, Purpose, and Relationships done -- see "Next up" above)
 - P6 document assembly (PDF/DOCX)
-- P7b Jupiter/Saturn transit ingress detection (see "Next up" above) -- needs new root-finding capability, transit computation doesn't exist yet, only natal (P7a, the dasha `.ics` export, is done -- `src/export/`)
+- P7b Jupiter/Saturn transit ingress detection: search primitive and `.ics` export both done and validated (`src/engine/transit.ts`, `src/export/transitCalendar.ts` -- see "Next up" above); not yet wired into `computeChart()`'s output or merged with the dasha `.ics` into a single file
 - P7's versioned-regeneration-with-diffs requirement -- not yet scoped into either P7a or P7b
 - P8 languages (`ta`/`hi`/`te` narrative output; type stub exists, no implementation) -- blocked on P5

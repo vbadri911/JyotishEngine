@@ -6,7 +6,7 @@
 import { DateTime } from "luxon";
 import type { BirthInput, ChartData, DashaPeriod, EngineSettings, Finding, Graha, PlanetPosition, SignName } from "./types.js";
 import { DEFAULT_ENGINE_SETTINGS } from "./types.js";
-import { computeRawPositions } from "./engine/ephemeris.js";
+import { computeRawPositions, julianDayUTToUtcISO } from "./engine/ephemeris.js";
 import { resolveLocation } from "./engine/location.js";
 import { assessDignity, assessCombustion } from "./engine/dignity.js";
 import { houseOf, houseLord } from "./engine/houses.js";
@@ -23,30 +23,9 @@ import signsData from "../data/signs.json" with { type: "json" };
 
 const SIGN_ORDER = signsData.signs.map((s) => s.name) as SignName[];
 
-// JD 2440587.5 = 1970-01-01T00:00:00 UTC (the Unix epoch expressed as a Julian Day) --
-// a fixed astronomical constant, not a project-specific convention.
-const JULIAN_DAY_UNIX_EPOCH = 2440587.5;
-
-/**
- * Converts julianDayUT (already computed from the birth location's correct historical
- * UTC offset -- see ephemeris.ts / timezone.ts) to an absolute UTC instant. Deliberately
- * NOT built by re-parsing input.date/input.time -- that string carries no timezone
- * information, so handing it to a date library without an explicit zone would silently
- * fall back to whatever timezone the code happens to run in, discarding the historical
- * offset (including the Bombay/Calcutta correction) entirely. Going through the
- * already-correct julianDayUT avoids that class of bug by construction.
- *
- * Rounds to the nearest millisecond: subtracting two ~2.4-million-magnitude floats and
- * scaling by 86.4M leaves sub-millisecond floating-point noise (observed: ~0.01ms) that
- * doesn't round-trip exactly -- e.g. an exact birth time landing 1ms short of a whole
- * second/minute boundary and silently formatting into the wrong minute. Birth times are
- * only ever given to the minute, so rounding away sub-millisecond noise here discards
- * nothing meaningful.
- */
-export function julianDayUTToUtcISO(julianDayUT: number): string {
-  const unixMillis = Math.round((julianDayUT - JULIAN_DAY_UNIX_EPOCH) * 86_400_000);
-  return DateTime.fromMillis(unixMillis, { zone: "utc" }).toISO()!;
-}
+// julianDayUTToUtcISO() now lives in ephemeris.ts (engine layer needs it too -- see
+// transit.ts) and is re-exported here for existing call sites/tests unchanged.
+export { julianDayUTToUtcISO };
 
 function signAndDegree(absoluteSiderealLongitude: number): { sign: SignName; degreeInSign: number } {
   const norm = ((absoluteSiderealLongitude % 360) + 360) % 360;

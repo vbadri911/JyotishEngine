@@ -8,6 +8,7 @@
  * approximation, so this doesn't reintroduce the imprecision the original
  * TODO here warned against).
  */
+import { DateTime } from "luxon";
 import {
   SwissEphemeris,
   Planet,
@@ -54,6 +55,32 @@ const NODE_BODY: Record<EngineSettings["nodeType"], LunarPoint> = {
   mean: LunarPoint.MeanNode,
   true: LunarPoint.TrueNode,
 };
+
+// JD 2440587.5 = 1970-01-01T00:00:00 UTC (the Unix epoch expressed as a Julian Day) --
+// a fixed astronomical constant, not a project-specific convention. Lives here (not
+// index.ts, where it was originally written) because engine-layer callers -- notably
+// the transit search below -- need it too, and an engine module importing "up" from
+// the pipeline entry point would be a backwards dependency. index.ts re-exports
+// julianDayUTToUtcISO for backward compatibility with existing call sites/tests.
+export const JULIAN_DAY_UNIX_EPOCH = 2440587.5;
+
+/**
+ * Converts a Julian Day (UT) to an absolute UTC instant. Rounds to the nearest
+ * millisecond: subtracting two ~2.4-million-magnitude floats and scaling by 86.4M
+ * leaves sub-millisecond floating-point noise (observed: ~0.01ms) that doesn't
+ * round-trip exactly -- e.g. an exact birth time landing 1ms short of a whole
+ * second/minute boundary and silently formatting into the wrong minute.
+ */
+export function julianDayUTToUtcISO(julianDayUT: number): string {
+  const unixMillis = Math.round((julianDayUT - JULIAN_DAY_UNIX_EPOCH) * 86_400_000);
+  return DateTime.fromMillis(unixMillis, { zone: "utc" }).toISO()!;
+}
+
+/** Inverse of julianDayUTToUtcISO -- needed to turn a search-start instant (e.g. "now") into a JD. */
+export function utcISOToJulianDayUT(iso: string): number {
+  const millis = DateTime.fromISO(iso, { zone: "utc" }).toMillis();
+  return millis / 86_400_000 + JULIAN_DAY_UNIX_EPOCH;
+}
 
 let swePromise: Promise<SwissEphemeris> | null = null;
 
@@ -120,4 +147,31 @@ export async function computeRawPositions(
   const ascendantSiderealLongitude = normalizeDegrees(houses.ascendant - ayanamsa);
 
   return { julianDayUT, ascendantSiderealLongitude, planets };
+}
+
+/** The subset of Graha that CLASSICAL_PLANETS actually maps -- excludes Rahu/Ketu,
+ *  which aren't independently-calculated bodies (see computeRawPositions above). */
+export type ClassicalGraha = keyof typeof CLASSICAL_PLANETS;
+
+/**
+ * Sidereal longitude of a single classical planet at an arbitrary Julian Day (UT),
+ * decoupled from any BirthInput/ResolvedLocation -- unlike computeRawPositions, which
+ * is anchored to one birth instant, this is the primitive a forward time-search (transit
+ * ingress detection, src/engine/transit.ts) repeatedly evaluates at many different JDs.
+ * Deliberately not folded into computeRawPositions' own loop to avoid touching an
+ * already golden-chart-tested code path for a refactor this feature doesn't require.
+ */
+export async function siderealLongitudeAt(
+  julianDayUT: number,
+  graha: ClassicalGraha,
+  settings: Pick<EngineSettings, "ayanamsa">
+): Promise<{ siderealLongitude: number; retrograde: boolean }> {
+  const swe = await getSwissEphemeris();
+  swe.setSiderealMode(AYANAMSA_MODE[settings.ayanamsa]);
+  const calcFlags = CalculationFlag.MoshierEphemeris | CalculationFlag.Sidereal | CalculationFlag.Speed;
+  const pos = swe.calculatePosition(julianDayUT, CLASSICAL_PLANETS[graha], calcFlags);
+  return {
+    siderealLongitude: normalizeDegrees(pos.longitude),
+    retrograde: pos.longitudeSpeed < 0,
+  };
 }

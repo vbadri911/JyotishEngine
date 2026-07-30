@@ -1,0 +1,62 @@
+{
+  "domain": "purpose",
+  "essence": {
+    "strong": [
+      "Purpose and direction are a genuine strength in this chart.",
+      "This chart shows a clear, strongly-supported sense of direction."
+    ],
+    "mixed": [
+      "Purpose here combines real clarity with a point of friction worth naming -- a strong underlying direction that still asks for some navigation."
+    ],
+    "challenging": [
+      "Purpose is an area this chart marks as needing deliberate reflection rather than obvious clarity."
+    ],
+    "thin": [
+      "No single placement dominates the sense of purpose in this chart."
+    ]
+  },
+  "overviewIntro": {
+    "strong": [
+      "Purpose and dharma stand out as one of this chart's clearer strengths."
+    ],
+    "mixed": [
+      "Purpose shows real clarity here, alongside a real point of friction worth naming."
+    ],
+    "challenging": [
+      "Purpose carries real friction in this chart -- not an area with obvious, easy clarity."
+    ],
+    "thin": [
+      "Purpose does not carry a strong signature in this chart; no placement here stands out enough to build a section around."
+    ]
+  },
+  "convergenceSupportive": [
+    "These placements reinforce each other, all pointing toward the same underlying sense of direction:"
+  ],
+  "convergenceChallenging": [
+    "These placements point in the same direction and are worth naming together, not separately:"
+  ],
+  "singleSupportive": [
+    "One placement stands out here:"
+  ],
+  "singleChallenging": [
+    "One placement here is worth naming directly:"
+  ],
+  "moreSupportive": [
+    "Beyond that, further support comes from:"
+  ],
+  "oneMoreSupportive": [
+    "One more placement is worth adding:"
+  ],
+  "moreChallenging": [
+    "Beyond that, further friction comes from:"
+  ],
+  "oneMoreChallenging": [
+    "One more placement is worth adding here:"
+  ],
+  "additionalContext": [
+    "Additional context from this chart:"
+  ],
+  "closingNote": [
+    "As with any placement, this describes a tendency and a capacity within the chart, not a fixed outcome -- how it plays out depends on the choices made within it."
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "domain": "relationships",
+  "essence": {
+    "strong": [
+      "Relationships and partnership are a genuine strength in this chart.",
+      "This chart shows strong natural support for close partnership and connection."
+    ],
+    "mixed": [
+      "Relationships here combine real strength with real friction -- genuine support alongside placements that ask for extra care."
+    ],
+    "challenging": [
+      "Relationships are an area this chart marks as calling for extra care and communication, not a source of easy, automatic harmony."
+    ],
+    "thin": [
+      "No single placement dominates the relationships picture in this chart."
+    ]
+  },
+  "overviewIntro": {
+    "strong": [
+      "Relationships and partnership stand out as one of this chart's clearer strengths."
+    ],
+    "mixed": [
+      "Relationships show a genuine mix here: real support sits alongside real points of friction worth naming."
+    ],
+    "challenging": [
+      "Relationships carry real friction in this chart -- an area calling for deliberate care and communication, not automatic ease."
+    ],
+    "thin": [
+      "Relationships do not carry a strong signature in this chart; no placement here stands out enough to build a section around."
+    ]
+  },
+  "convergenceSupportive": [
+    "These placements reinforce each other, all pointing toward the same underlying support for connection and partnership:"
+  ],
+  "convergenceChallenging": [
+    "These placements point in the same direction and are worth naming together, not separately:"
+  ],
+  "singleSupportive": [
+    "One placement stands out here:"
+  ],
+  "singleChallenging": [
+    "One placement here is worth naming directly:"
+  ],
+  "moreSupportive": [
+    "Beyond that, further support comes from:"
+  ],
+  "oneMoreSupportive": [
+    "One more placement is worth adding:"
+  ],
+  "moreChallenging": [
+    "Beyond that, further friction comes from:"
+  ],
+  "oneMoreChallenging": [
+    "One more placement is worth adding here:"
+  ],
+  "additionalContext": [
+    "Additional context from this chart:"
+  ],
+  "closingNote": [
+    "As with any placement, this describes a tendency and a capacity within the chart, not a prediction about any specific relationship or its outcome. Free will operates within the leanings described here."
+  ],
+  "conditionalClosingNotes": [
+    {
+      "triggerPatterns": [
+        "^houseLords\\.7\\.",
+        "^planets\\.Venus\\.dignity$",
+        "^planets\\.Jupiter\\.dignity$",
+        "^yoga-malavya",
+        "^yoga-hamsa",
+        "^dosha-mangal"
+      ],
+      "text": [
+        "Where a placement touches partnership, the partner's own chart carries proportional weight -- this is not a verdict on the relationship by itself."
+      ]
+    },
+    {
+      "triggerPatterns": ["^houseLords\\.5\\."],
+      "text": [
+        "Where a placement touches children, treat it as a loose tendency, not a claim about the ability to have them."
+      ]
+    }
+  ]
+}

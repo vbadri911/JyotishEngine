@@ -1,0 +1,62 @@
+{
+  "domain": "career",
+  "essence": {
+    "strong": [
+      "Career is a genuine strength in this chart.",
+      "This chart shows strong natural capability in career and public life."
+    ],
+    "mixed": [
+      "Career here combines real strength with real friction -- capability paired with placements that ask for extra effort."
+    ],
+    "challenging": [
+      "Career is an area this chart marks as needing sustained, deliberate effort rather than coming easily."
+    ],
+    "thin": [
+      "No single placement dominates the career picture in this chart."
+    ]
+  },
+  "overviewIntro": {
+    "strong": [
+      "Career stands out as one of this chart's clearer strengths."
+    ],
+    "mixed": [
+      "Career shows a genuine mix here: real strengths sit alongside real friction points."
+    ],
+    "challenging": [
+      "Career carries real friction in this chart -- not an area that comes easily."
+    ],
+    "thin": [
+      "Career does not carry a strong signature in this chart; no placement here stands out enough to build a section around."
+    ]
+  },
+  "convergenceSupportive": [
+    "These placements reinforce each other, all pointing toward the same underlying strength:"
+  ],
+  "convergenceChallenging": [
+    "These placements point in the same direction and are worth naming together, not separately:"
+  ],
+  "singleSupportive": [
+    "One placement stands out here:"
+  ],
+  "singleChallenging": [
+    "One placement here is worth naming directly:"
+  ],
+  "moreSupportive": [
+    "Beyond that, further support comes from:"
+  ],
+  "oneMoreSupportive": [
+    "One more placement is worth adding:"
+  ],
+  "moreChallenging": [
+    "Beyond that, further friction comes from:"
+  ],
+  "oneMoreChallenging": [
+    "One more placement is worth adding here:"
+  ],
+  "additionalContext": [
+    "Additional context from this chart:"
+  ],
+  "closingNote": [
+    "As with any placement, this describes a tendency and a capacity within the chart, not a fixed outcome -- how it plays out depends on the choices made within it."
+  ]
+}

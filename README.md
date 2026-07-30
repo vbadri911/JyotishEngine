@@ -20,9 +20,9 @@ Status below is this project's own honest read of it, not a copy:
 | P2 Dasha | **Done.** Full Vimshottari math (`src/engine/dasha.ts`) -- mahadasha/antardasha/pratyantardasha, wired into `computeChart()`, verified against real ephemeris. |
 | P3 Rules engine | **Partial.** Dignity, houses, combustion, D9 all done and verified. Yoga/dosha detection (`src/rules/yogas.ts`) covers a simplified subset (5 Pancha Mahapurusha yogas + Gajakesari + Kemadruma + Mangal Dosha) -- general Raja Yoga, Nabhasa yogas, Kala Sarpa Dosha, and Sade Sati are not implemented (`BACKLOG.md`). |
 | P4 Findings/confidence | **Done.** `src/findings/index.ts` converts dignity, house-lord, combustion, and current-dasha-period facts into `Finding` objects per `interpretation.md`'s schema and domain mapping, combined with yoga findings in `computeChart()`'s output. Confidence checks (`src/engine/confidence.ts`) implement all 5 rows of SKILL.md's table. |
-| P5 Narrative templates | Not started. |
+| P5 Narrative templates | **Started -- Career, Purpose, and Relationships done; wealth, health, and timing to go.** `src/narrative/render.ts` is a domain-agnostic renderer that quotes `Finding.statement` verbatim rather than regenerating facts (see `DECISIONS.md` for why this departs from the original spec's illustrated template shape), semantically de-duplicates findings describing the same underlying fact, and renders `full` depth as `overview`'s own content plus a continuation of genuinely new findings. Mahapurusha/Kemadruma yoga domain tags were audited and corrected against `constants.md`'s karaka table after an original blanket tag was caught reading as inaccurate in real rendered prose (`DECISIONS.md`). A structural sweep (`tests/findingStatementQuality.test.ts`) now checks every finding-generating function for developer-facing language (file references, "Note:" asides) that could otherwise leak verbatim into a real reader's report -- found and fixed three real instances. Closing notes support topic-conditional clauses (e.g. Relationships' partnership/children framing) that only fire when a finding actually touching that topic was quoted in the text, not unconditionally. Validated against the golden chart (Career: rich/all-supportive; Purpose: a real "mixed" tier; Relationships: a real "strong" tier with a genuine EXACT yoga plus a dedicated sensitive-domain fixture with a real triggered Mangal Dosha) and hand-built fixtures for cases the golden chart can't exercise (`BACKLOG.md`). |
 | P6 Document assembly (PDF/DOCX) | Not started. |
-| P7 Living document | Split into P7a and P7b (`BACKLOG.md`). **P7a done**: `.ics` export of dasha/Antardasha/Pratyantardasha transitions (`src/export/ics.ts`, `src/export/dashaCalendar.ts`) -- RFC 5545 compliant (line folding, text escaping, UTC normalization), tested against real `computeChart()` output. **P7b not started**: Jupiter/Saturn transit ingress detection needs a new root-finding capability (forward-search for a sign-boundary crossing), not yet designed. Versioned regeneration with diffs not yet scoped into either. |
+| P7 Living document | Split into P7a and P7b (`BACKLOG.md`). **P7a done**: `.ics` export of dasha/Antardasha/Pratyantardasha transitions (`src/export/ics.ts`, `src/export/dashaCalendar.ts`) -- RFC 5545 compliant (line folding, text escaping, UTC normalization), tested against real `computeChart()` output. **P7b done**: `src/engine/transit.ts` forward-searches for Jupiter/Saturn sidereal sign-ingress crossings (bracket-then-refine root-finding, a new algorithm class -- everything else in this codebase evaluates a single fixed instant), validated against real sidereal transit dates from independent sources -- all five checked ingress events matched within about an hour, including Jupiter's and Saturn's known retrograde preview/permanent-ingress patterns, reproduced without being told to expect them. `src/export/transitCalendar.ts` exports these as `.ics` (next 3 ingresses per planet, reusing `ics.ts`'s builder unchanged). Not yet wired into `computeChart()`'s output, and dasha/transit remain two separate `.ics` files rather than one combined export -- see `BACKLOG.md`. Versioned regeneration with diffs not yet scoped into either P7a or P7b. |
 | P8 Languages | Not started; blocked on P5 existing in English first. |
 
 Underlying pure-logic modules (all done, unit-tested): dignity
@@ -54,15 +54,25 @@ npm test           # runs the pure-logic unit tests (dignity, houses, varga, das
 ```
 
 `npm run test:golden` runs the golden-chart fixture through the real
-pipeline (`tests/golden-charts/`) — one known-and-documented failure remains
-(longitude tolerance on 4 of 9 planets; see `BACKLOG.md`), not a regression.
+pipeline (`tests/golden-charts/`). The suite passes clean end to end (no
+red): 4 of 9 planets (Sun, Mars, Rahu, Ketu) land just outside the stated
+1 arc-minute tolerance, a known, documented, and deliberately-not-"fixed" gap
+(see `BACKLOG.md`) — modeled as `it.fails()` expected failures rather than
+plain assertions specifically so the suite's signal stays trustworthy: a
+genuinely new failure elsewhere would stand out immediately instead of
+blending into "the one that's always red" (see `DECISIONS.md`). Full suite
+as of this session: 205/205.
 
 ## Next steps
 
 P1-P4 are functionally complete (P3's yoga coverage intentionally partial --
-see above). See [`BACKLOG.md`](BACKLOG.md) for what's still open. P5-P8 are
-not started; P7 (the living-document `.ics`/versioned-regeneration feature)
-is core MVP scope, not deferred.
+see above). P7's `.ics` export (both dasha and Jupiter/Saturn transit
+ingresses) is done, though not yet wired into `computeChart()`'s own output
+and versioned-regeneration-with-diffs isn't scoped yet. P5 has three of six
+narrative domains done (Career, Purpose, Relationships); wealth, health, and
+timing remain, plus P6 (document assembly) and P8 (regional languages), the
+latter blocked on P5 finishing in English first. See [`BACKLOG.md`](BACKLOG.md)
+for the full current state.
 
 ## License
 

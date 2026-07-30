@@ -22,6 +22,8 @@ import type { ChartData, Domain, Finding, Graha, Polarity } from "../types.js";
 import type { DashaComputationResult } from "../engine/dasha.js";
 import { findActivePeriod } from "../engine/dasha.js";
 import { ordinal } from "../util/ordinal.js";
+import { dignityPredicate } from "../util/dignityPredicate.js";
+import { GRAHA_DOMAINS } from "./domainMapping.js";
 
 let counter = 0;
 function nextId(prefix: string): string {
@@ -41,15 +43,6 @@ const DIGNITY_POLARITY: Record<string, Polarity> = {
   own: "supportive",
   moolatrikona: "supportive",
   debilitated: "challenging",
-};
-
-// interpretation.md domain-mapping table, "Primary planets/factors" column -- only the
-// planets explicitly named there, independent of what they happen to lord in a given chart.
-const GRAHA_DOMAINS: Partial<Record<Graha, Domain[]>> = {
-  Sun: ["career"],
-  Saturn: ["career"],
-  Jupiter: ["wealth", "relationships"],
-  Venus: ["wealth", "relationships"],
 };
 
 /**
@@ -81,9 +74,9 @@ export function dignityFindings(chart: ChartData): Finding[] {
     findings.push({
       id: nextId("dignity"),
       domain: [...domains],
-      statement: `${planet.graha} is ${planet.dignity} in ${planet.sign} (house ${planet.house})${
-        planet.graha === lagnaLord ? ", and is the Lagna lord" : ""
-      }.`,
+      statement: `${planet.graha} is ${dignityPredicate(planet.dignity)} in ${planet.sign}, in the ${ordinal(
+        planet.house
+      )} house${planet.graha === lagnaLord ? ", and is also the Lagna lord" : ""}.`,
       evidence: [
         { path: `planets.${planet.graha}.dignity`, value: planet.dignity },
         { path: `planets.${planet.graha}.sign`, value: planet.sign },
@@ -126,9 +119,9 @@ export function houseLordFindings(chart: ChartData): Finding[] {
     findings.push({
       id: nextId(`house-lord-${house}`),
       domain: domains!,
-      statement: `${ordinal(house)} lord (${lord}) is placed in ${lordPlanet.sign} in the ${ordinal(placedInHouse)} house${
+      statement: `${ordinal(house)} lord ${lord} is placed in ${lordPlanet.sign}, in the ${ordinal(placedInHouse)} house${
         ownHouse ? " -- its own house" : ""
-      }, dignity ${lordPlanet.dignity}.`,
+      }, and is ${dignityPredicate(lordPlanet.dignity)}.`,
       evidence: [
         { path: `houseLords.${house}.lord`, value: lord },
         { path: `houseLords.${house}.placedInHouse`, value: placedInHouse },
@@ -150,7 +143,7 @@ export function combustionFindings(chart: ChartData): Finding[] {
     findings.push({
       id: nextId("combustion"),
       domain: domains,
-      statement: `${planet.graha} is combust, ${planet.distanceFromSunDegrees.toFixed(2)} deg from the Sun -- its significations are weakened while combust.`,
+      statement: `${planet.graha} is combust, ${planet.distanceFromSunDegrees.toFixed(2)} degrees from the Sun -- its significations are weakened while this close to the Sun.`,
       evidence: [
         { path: `planets.${planet.graha}.combust`, value: true },
         { path: `planets.${planet.graha}.distanceFromSunDegrees`, value: planet.distanceFromSunDegrees },
