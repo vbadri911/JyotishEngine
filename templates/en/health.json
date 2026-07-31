@@ -1,0 +1,76 @@
+{
+  "domain": "health",
+  "essence": {
+    "strong": [
+      "Health and vitality show real, natural support in this chart.",
+      "This chart shows a strong underlying constitution."
+    ],
+    "mixed": [
+      "Health here combines real underlying strength with a placement or two that calls for a bit more care and attention."
+    ],
+    "challenging": [
+      "Health is an area this chart marks as calling for a bit more attention and care, not a source of easy, automatic strength."
+    ],
+    "thin": [
+      "No single placement dominates the health picture in this chart."
+    ]
+  },
+  "overviewIntro": {
+    "strong": [
+      "Health and vitality stand out as one of this chart's clearer strengths."
+    ],
+    "mixed": [
+      "Health shows a genuine mix here: real underlying strength sits alongside placements that call for a bit more care."
+    ],
+    "challenging": [
+      "Health carries real friction in this chart -- an area calling for deliberate care and attention, not automatic ease."
+    ],
+    "thin": [
+      "Health does not carry a strong signature in this chart; no placement here stands out enough to build a section around."
+    ]
+  },
+  "convergenceSupportive": [
+    "These placements reinforce each other, all pointing toward the same underlying vitality and constitutional strength:"
+  ],
+  "convergenceChallenging": [
+    "These placements point in the same direction and are worth naming together, not separately:"
+  ],
+  "singleSupportive": [
+    "One placement stands out here:"
+  ],
+  "singleChallenging": [
+    "One placement here is worth naming directly:"
+  ],
+  "moreSupportive": [
+    "Beyond that, further support comes from:"
+  ],
+  "oneMoreSupportive": [
+    "One more placement is worth adding:"
+  ],
+  "moreChallenging": [
+    "Beyond that, further friction comes from:"
+  ],
+  "oneMoreChallenging": [
+    "One more placement is worth adding here:"
+  ],
+  "additionalContext": [
+    "Additional context from this chart:"
+  ],
+  "closingNote": [
+    "As with any placement, this describes a general tendency within the chart, not a diagnosis and not a fixed outcome -- these are read as traditional body-part associations only, and free will and everyday choices operate within the leanings described here."
+  ],
+  "conditionalClosingNotes": [
+    {
+      "triggerPatterns": ["^houseLords\\.6\\."],
+      "text": [
+        "Where a placement touches the 6th house specifically, treat it as a general tendency linked to traditional body-system associations -- not a diagnosis, and not a prediction of any specific illness or its timing. A real concern is a conversation for a qualified doctor, not this chart."
+      ]
+    },
+    {
+      "triggerPatterns": ["^houseLords\\.8\\."],
+      "text": [
+        "Where a placement touches the 8th house specifically, it is read here only as a general tendency toward resilience or chronic strain -- never as a prediction of longevity. Any real concern about a chronic condition belongs with a qualified medical professional, not an astrological reading."
+      ]
+    }
+  ]
+}

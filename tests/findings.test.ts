@@ -165,6 +165,19 @@ describe("currentDashaFinding", () => {
   it("returns null for an instant outside the computed 120-year cycle", () => {
     expect(currentDashaFinding(dasha, "2200-01-01T00:00:00.000Z")).toBeNull();
   });
+
+  it("formats dates as human-readable UTC prose, not a raw local-offset ISO instant -- bug found while building the P5 Timing renderer, the first real consumer of this statement's text", () => {
+    // Same underlying Luxon behavior already fixed for .ics UID/DESCRIPTION
+    // (DECISIONS.md, P7a): DashaPeriod.start/.end carry whatever local offset
+    // the running environment has, so a raw interpolation here would leak an
+    // environment-dependent timestamp into reader-facing prose. Never
+    // exercised before now because no domain renderer ever quoted this
+    // Finding's statement until Timing was built.
+    const finding = currentDashaFinding(dasha, "2020-01-01T00:00:00.000Z");
+    expect(finding!.statement).not.toMatch(/\d{4}-\d{2}-\d{2}T/); // no raw ISO date-time
+    expect(finding!.statement).not.toMatch(/[+-]\d{2}:\d{2}\b/); // no raw UTC offset
+    expect(finding!.statement).toMatch(/\d{1,2} \w+ \d{4} to \d{1,2} \w+ \d{4}/); // "6 December 2019 to 1 February 2020"
+  });
 });
 
 describe("aggregateFindings", () => {

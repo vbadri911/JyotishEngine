@@ -23,6 +23,7 @@ import type { DashaComputationResult } from "../engine/dasha.js";
 import { findActivePeriod } from "../engine/dasha.js";
 import { ordinal } from "../util/ordinal.js";
 import { dignityPredicate } from "../util/dignityPredicate.js";
+import { formatUtcDate } from "../util/formatUtcDate.js";
 import { GRAHA_DOMAINS } from "./domainMapping.js";
 
 let counter = 0;
@@ -32,13 +33,13 @@ function nextId(prefix: string): string {
 }
 
 const NOTABLE_DIGNITIES = new Set(["exalted", "own", "moolatrikona", "debilitated"]);
-const DIGNITY_STRENGTH: Record<string, number> = {
+export const DIGNITY_STRENGTH: Record<string, number> = {
   exalted: 0.9,
   own: 0.75,
   moolatrikona: 0.7,
   debilitated: 0.8, // a strong signal, just a challenging one -- strength is magnitude, not favorability
 };
-const DIGNITY_POLARITY: Record<string, Polarity> = {
+export const DIGNITY_POLARITY: Record<string, Polarity> = {
   exalted: "supportive",
   own: "supportive",
   moolatrikona: "supportive",
@@ -169,10 +170,16 @@ export function currentDashaFinding(dasha: DashaComputationResult, asOfISO: stri
   const mahadasha = antardasha?.parent;
   const path = [mahadasha?.lord, antardasha?.lord, active.lord].filter(Boolean).join(" -> ");
 
+  // Bug found while building the P5 Timing renderer, the first real consumer
+  // of this statement's text (see DECISIONS.md): active.start/.end carry
+  // whatever local offset the running environment happens to have (same
+  // underlying Luxon behavior already fixed for .ics UID/DESCRIPTION), so
+  // interpolating them raw here would leak a raw, environment-dependent
+  // timestamp into reader-facing prose. formatUtcDate() normalizes first.
   return {
     id: nextId("current-dasha"),
     domain: ["timing"],
-    statement: `Currently running: ${path} (Mahadasha / Antardasha / Pratyantardasha), ${active.start} to ${active.end}.`,
+    statement: `Currently running: ${path} (Mahadasha / Antardasha / Pratyantardasha), ${formatUtcDate(active.start)} to ${formatUtcDate(active.end)}.`,
     evidence: [
       { path: "mahadasha.lord", value: mahadasha?.lord },
       { path: "antardasha.lord", value: antardasha?.lord },

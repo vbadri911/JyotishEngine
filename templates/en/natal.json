@@ -1,0 +1,21 @@
+{
+  "section": "natal",
+  "introChartTables": [
+    "Here is your chart, decoded placement by placement. The table below gives every planet's sign, exact degree, nakshatra and pada, house, and dignity."
+  ],
+  "introD9": [
+    "The Navamsa (D9) is a divisional chart used classically to examine a placement's deeper strength, particularly for marriage and dharma. Below is your D9 chart alongside the Rasi (D1) chart above."
+  ],
+  "introPlanetNotes": [
+    "A note on each of the nine grahas as placed in this chart:"
+  ],
+  "introHouseNotes": [
+    "A note on each of the twelve houses and the planet that rules it:"
+  ],
+  "introYogaTable": [
+    "The classical yogas and doshas checked against this chart, including any notable absences:"
+  ],
+  "closingNote": [
+    "This is the raw structure of the chart -- every other section of this report draws its claims from these same placements."
+  ]
+}

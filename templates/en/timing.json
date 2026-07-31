@@ -1,0 +1,24 @@
+{
+  "domain": "timing",
+  "essenceNoActivePeriod": [
+    "This chart's computed dasha cycle does not cover the current date."
+  ],
+  "overviewIntro": [
+    "Here is where this chart's Vimshottari dasha timeline currently stands:"
+  ],
+  "overviewNoActivePeriod": [
+    "This chart's computed dasha cycle does not cover the current date, so no near-term timeline is available."
+  ],
+  "fullMahadashaArcIntro": [
+    "The full Mahadasha arc for this chart:"
+  ],
+  "fullAntardashaIntro": [
+    "The current Mahadasha's Antardashas in full:"
+  ],
+  "ageSuppressedNote": [
+    "Periods beyond roughly age 90 are not shown here."
+  ],
+  "closingNote": [
+    "Dasha periods describe general life-chapter themes, not fixed events -- how a period unfolds depends on the choices made within it, the same as any other placement in this chart."
+  ]
+}

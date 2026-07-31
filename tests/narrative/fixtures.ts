@@ -163,6 +163,84 @@ export function buildExhaustedCareerChart(): ChartData {
 }
 
 /**
+ * Built to stress-test Health specifically -- one of interpretation.md's named
+ * SENSITIVE domains, with its own two-tier caution (Health's general
+ * non-diagnosis rule, plus the separate, stricter Longevity rule tied to the
+ * 8th house). Cancer Lagna chosen specifically because its 1st, 6th, and 8th
+ * lords (Moon, Jupiter, Saturn) are three DIFFERENT planets -- unlike e.g.
+ * Aries Lagna, where the 1st and 8th houses share a lord (both Mars) and would
+ * make the vitality and longevity findings collide in dedup, hiding one of
+ * them. All three debilitations are textbook-accurate (Moon in Scorpio,
+ * Jupiter in Capricorn, Saturn in Aries -- each opposite that graha's real
+ * exaltation sign), not arbitrary: Moon is also the Lagna lord (vitality,
+ * house 1), Jupiter is the 6th lord (illness topic), Saturn is the 8th lord
+ * (longevity/chronic topic) -- the three real, non-manufactured challenging
+ * findings Health's structure can ever produce (dignityFindings() only tags
+ * health for the Lagna lord specifically, and houseLordFindings() only tags
+ * health for houses 1/6/8 -- see findings/index.ts). Every other planet is
+ * given non-notable dignity so it contributes no Health findings at all,
+ * keeping the count at exactly these three.
+ */
+export function buildWeakHealthChart(): ChartData {
+  return {
+    ...BASE,
+    ascendant: { siderealLongitude: 0, sign: "Cancer", degreeInSign: 0, nakshatra: 1, pada: 1 },
+    planets: {
+      Sun: planet({ graha: "Sun", sign: "Leo", degreeInSign: 10, house: 2, dignity: "neutral" }),
+      Moon: planet({ graha: "Moon", sign: "Scorpio", degreeInSign: 5, house: 5, dignity: "debilitated" }),
+      Mars: planet({ graha: "Mars", sign: "Sagittarius", degreeInSign: 12, house: 6, dignity: "neutral" }),
+      Mercury: planet({ graha: "Mercury", sign: "Virgo", degreeInSign: 8, house: 3, dignity: "neutral" }),
+      Jupiter: planet({ graha: "Jupiter", sign: "Capricorn", degreeInSign: 20, house: 7, dignity: "debilitated" }),
+      Venus: planet({ graha: "Venus", sign: "Libra", degreeInSign: 6, house: 4, dignity: "neutral" }),
+      Saturn: planet({ graha: "Saturn", sign: "Aries", degreeInSign: 15, house: 10, dignity: "debilitated" }),
+      Rahu: planet({ graha: "Rahu", sign: "Pisces", degreeInSign: 18, house: 9, dignity: "neutral" }),
+      Ketu: planet({ graha: "Ketu", sign: "Virgo", degreeInSign: 18, house: 3, dignity: "neutral" }),
+    },
+    houseLords: {
+      1: { lord: "Moon", placedInHouse: 5 },
+      2: { lord: "Sun", placedInHouse: 2 },
+      3: { lord: "Mercury", placedInHouse: 3 },
+      4: { lord: "Venus", placedInHouse: 4 },
+      5: { lord: "Mars", placedInHouse: 6 },
+      6: { lord: "Jupiter", placedInHouse: 7 },
+      7: { lord: "Saturn", placedInHouse: 10 },
+      8: { lord: "Saturn", placedInHouse: 10 },
+      9: { lord: "Jupiter", placedInHouse: 7 },
+      10: { lord: "Mars", placedInHouse: 6 },
+      11: { lord: "Venus", placedInHouse: 4 },
+      12: { lord: "Mercury", placedInHouse: 3 },
+    },
+  };
+}
+
+/**
+ * Same fixture as above with the 8th lord (Saturn) restored to neutral --
+ * isolates the illness (6th house / Jupiter) topic from the longevity (8th
+ * house / Saturn) topic, so each conditional closing-note clause can be
+ * tested independently. Vitality (Moon, Lagna lord) stays debilitated so the
+ * domain-wide "some challenging finding exists" gate is still satisfied.
+ */
+export function buildIllnessOnlyHealthChart(): ChartData {
+  const chart = buildWeakHealthChart();
+  return {
+    ...chart,
+    planets: { ...chart.planets, Saturn: { ...chart.planets.Saturn, dignity: "neutral" as const } },
+  };
+}
+
+/**
+ * Mirror of the above, isolating longevity (8th house / Saturn) from illness
+ * (6th house / Jupiter): Jupiter restored to neutral, Saturn stays debilitated.
+ */
+export function buildLongevityOnlyHealthChart(): ChartData {
+  const chart = buildWeakHealthChart();
+  return {
+    ...chart,
+    planets: { ...chart.planets, Jupiter: { ...chart.planets.Jupiter, dignity: "neutral" as const } },
+  };
+}
+
+/**
  * Built to stress-test Relationships specifically -- one of interpretation.md's
  * named SENSITIVE domains (marriage/children get non-negotiable framing rules
  * SKILL.md principle 5 ties to). Aries Lagna, Mars physically in house 1 (also
@@ -201,6 +279,53 @@ export function buildWeakRelationshipsChart(): ChartData {
       10: { lord: "Saturn", placedInHouse: 10 },
       11: { lord: "Saturn", placedInHouse: 10 },
       12: { lord: "Jupiter", placedInHouse: 9 },
+    },
+  };
+}
+
+/**
+ * Built to stress-test Wealth specifically -- not a named sensitive domain
+ * (interpretation.md's sensitivity list is health/children/marriage/longevity
+ * only), so this exists purely to exercise real challenging content, unlike
+ * Health/Relationships' fixtures which also had to prove sensitivity
+ * guardrails. Aries Lagna (2nd lord Venus, 11th lord Saturn -- deliberately
+ * DIFFERENT planets, unlike the golden chart's Leo Lagna where both are
+ * Mercury; that double-lord case is already covered by the golden chart
+ * itself plus dedicated synthetic tests in render.test.ts, so this fixture
+ * stays simple by design). Venus (2nd lord) debilitated in Virgo, Saturn
+ * (11th lord) debilitated in Aries, Jupiter (wealth karaka via
+ * `GRAHA_DOMAINS`, not a house lord here) debilitated in Capricorn -- three
+ * real, independent, non-manufactured challenging findings (three different
+ * planets, no shared evidence key, so no dedup collision among them either).
+ */
+export function buildWeakWealthChart(): ChartData {
+  return {
+    ...BASE,
+    ascendant: { siderealLongitude: 0, sign: "Aries", degreeInSign: 0, nakshatra: 1, pada: 1 },
+    planets: {
+      Sun: planet({ graha: "Sun", sign: "Leo", degreeInSign: 10, house: 5, dignity: "neutral" }),
+      Moon: planet({ graha: "Moon", sign: "Cancer", degreeInSign: 10, house: 4, dignity: "neutral" }),
+      Mars: planet({ graha: "Mars", sign: "Scorpio", degreeInSign: 12, house: 8, dignity: "neutral" }),
+      Mercury: planet({ graha: "Mercury", sign: "Gemini", degreeInSign: 8, house: 3, dignity: "neutral" }),
+      Jupiter: planet({ graha: "Jupiter", sign: "Capricorn", degreeInSign: 5, house: 10, dignity: "debilitated" }),
+      Venus: planet({ graha: "Venus", sign: "Virgo", degreeInSign: 27, house: 6, dignity: "debilitated" }),
+      Saturn: planet({ graha: "Saturn", sign: "Aries", degreeInSign: 20, house: 1, dignity: "debilitated" }),
+      Rahu: planet({ graha: "Rahu", sign: "Sagittarius", degreeInSign: 18, house: 9, dignity: "neutral" }),
+      Ketu: planet({ graha: "Ketu", sign: "Gemini", degreeInSign: 18, house: 3, dignity: "neutral" }),
+    },
+    houseLords: {
+      1: { lord: "Mars", placedInHouse: 8 },
+      2: { lord: "Venus", placedInHouse: 6 },
+      3: { lord: "Mercury", placedInHouse: 3 },
+      4: { lord: "Moon", placedInHouse: 4 },
+      5: { lord: "Sun", placedInHouse: 5 },
+      6: { lord: "Mercury", placedInHouse: 3 },
+      7: { lord: "Venus", placedInHouse: 6 },
+      8: { lord: "Mars", placedInHouse: 8 },
+      9: { lord: "Jupiter", placedInHouse: 10 },
+      10: { lord: "Saturn", placedInHouse: 1 },
+      11: { lord: "Saturn", placedInHouse: 1 },
+      12: { lord: "Jupiter", placedInHouse: 10 },
     },
   };
 }
