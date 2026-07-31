@@ -144,6 +144,19 @@ function richnessRank(f: Finding): number {
   return 3;
 }
 
+/** Extracts the governed house number from a house-lord finding's own
+ *  `houseLords.N.lord` evidence entry (null for any other finding type). Two
+ *  house-lord findings sharing a planet+dignity key are NOT the same
+ *  underlying fact unless they're also for the SAME governed house -- one
+ *  planet legitimately ruling two different domain-relevant houses (e.g.
+ *  Mercury as both 2nd and 11th lord for a Leo Lagna -- Gemini/Virgo are the
+ *  same "twin-sign" pattern as Mars/Venus/Jupiter/Saturn) is two independent
+ *  facts, not one fact stated twice. See dedupeBySharedFact's own doc. */
+function governedHouseNumber(f: Finding): number | null {
+  const entry = f.evidence.find((e) => /^houseLords\.\d+\.lord$/.test(e.path));
+  return entry ? Number(entry.path.split(".")[1]) : null;
+}
+
 /** Exported for direct testing of the priority chain (tests/narrative/render.test.ts)
  *  -- real charts have produced 2- and 3-way collisions incidentally, but the full
  *  4-rank ordering deserves an explicit, controlled test, not just incidental coverage. */
@@ -165,9 +178,29 @@ export function dedupeBySharedFact(findings: Finding[]): Finding[] {
 
   const representatives: Finding[] = [...standalone];
   for (const cluster of clusters.values()) {
-    const winner = [...cluster].sort(
+    const sorted = [...cluster].sort(
       (a, b) => richnessRank(a) - richnessRank(b) || b.strength - a.strength || order.get(a)! - order.get(b)!
-    )[0]!;
+    );
+    const winner = sorted[0]!;
+
+    // A yoga or Lagna-lord-flagged dignity finding (rank 0/1) legitimately
+    // outranks and absorbs ANY house-lord finding for the same planet -- it
+    // says strictly more about the same underlying placement (the Sasa/Career
+    // and Malavya/Wealth precedents this project already relies on). But when
+    // the would-be winner is ITSELF a house-lord finding, there's no richer
+    // narrative justifying dropping a SIBLING house-lord finding for a
+    // DIFFERENT governed house -- keep every house-lord finding whose
+    // governed house differs from the others', instead of collapsing to
+    // whichever was generated first.
+    if (richnessRank(winner) === 2) {
+      const houseLordMembers = cluster.filter((f) => richnessRank(f) === 2);
+      const governedHouses = new Set(houseLordMembers.map(governedHouseNumber));
+      if (governedHouses.size > 1) {
+        representatives.push(...houseLordMembers);
+        continue;
+      }
+    }
+
     representatives.push(winner);
   }
 

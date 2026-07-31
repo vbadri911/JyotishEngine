@@ -272,6 +272,34 @@ describe("dedupeBySharedFact: explicit priority-chain test (real charts have onl
     expect(result[0]!.id).toBe("house-lord-fake-3");
   });
 
+  it("two house-lord findings for DIFFERENT governed houses (same planet, same dignity) BOTH survive -- e.g. Mercury as both 2nd and 11th lord", () => {
+    const secondLord = fake("house-lord-2-fake-1", "2nd lord Mars is exalted.", {
+      evidence: [...sharedEvidence, { path: "houseLords.2.lord", value: "Mars" }],
+    });
+    const eleventhLord = fake("house-lord-11-fake-2", "11th lord Mars is exalted.", {
+      evidence: [...sharedEvidence, { path: "houseLords.11.lord", value: "Mars" }],
+      strength: 0.9, // higher strength, but must NOT cause the other to be dropped -- they're peers, not rivals
+    });
+
+    const result = dedupeBySharedFact([secondLord, eleventhLord]);
+    expect(result).toHaveLength(2);
+    expect(result.map((f) => f.id).sort()).toEqual(["house-lord-11-fake-2", "house-lord-2-fake-1"]);
+  });
+
+  it("a yoga finding still absorbs MULTIPLE house-lord siblings for different governed houses, not just one -- the yoga/Lagna-lord precedent generalizes", () => {
+    const yoga = fake("yoga-fake-1", "Yoga statement.", { classification: "EXACT" });
+    const secondLord = fake("house-lord-2-fake-2", "2nd lord Mars is exalted.", {
+      evidence: [...sharedEvidence, { path: "houseLords.2.lord", value: "Mars" }],
+    });
+    const eleventhLord = fake("house-lord-11-fake-3", "11th lord Mars is exalted.", {
+      evidence: [...sharedEvidence, { path: "houseLords.11.lord", value: "Mars" }],
+    });
+
+    const result = dedupeBySharedFact([secondLord, eleventhLord, yoga]);
+    expect(result).toHaveLength(1);
+    expect(result[0]!.id).toBe("yoga-fake-1");
+  });
+
   it("findings with no shared dignity evidence never collide -- each passes through unchanged", () => {
     const a = fake("a", "Statement A.", { evidence: [{ path: "planets.Sun.dignity", value: "exalted" }] });
     const b = fake("b", "Statement B.", { evidence: [{ path: "planets.Venus.dignity", value: "own" }] });

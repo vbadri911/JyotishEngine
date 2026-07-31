@@ -59,6 +59,8 @@ Read the relevant file rather than working from memory. Each is dense with exact
 | `references/varga.md` | Divisional chart construction, D9 rule in full, general varga function | Navamsa or any divisional chart |
 | `references/yogas.md` | Yoga and dosha definitions with exact conditions and cancellation rules | Any yoga/dosha detection |
 | `references/interpretation.md` | House-by-house and planet-by-planet interpretive frames, domain mapping, output structure | Writing readings or interpretation templates |
+| `references/chart-layout.md` | South Indian chart's fixed 4×4 grid layout, sign positions, Lagna/house-number/retrograde display conventions | Any chart-drawing code (SVG, PDF) |
+| `references/personality.md` | Lagna-sign temperament (element + modality + lord), v1-scoped; why Phaladeepika Ch. 9 was investigated and not used directly | Any Personality-section work (Full Blueprint) |
 
 ## Workflow for a full chart analysis
 

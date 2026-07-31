@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { computeChart } from "../src/index.js";
 import { DEFAULT_ENGINE_SETTINGS } from "../src/types.js";
-import type { ChartData, PlanetPosition, Graha, Finding } from "../src/types.js";
+import type { ChartData, PlanetPosition, Graha, Finding, SignName } from "../src/types.js";
 import {
   detectMahapurushaYogas,
   detectGajakesariYoga,
@@ -9,6 +9,7 @@ import {
   detectMangalDosha,
 } from "../src/rules/yogas.js";
 import { dignityFindings, houseLordFindings, combustionFindings } from "../src/findings/index.js";
+import { lagnaTemperamentNote, lagnaLordNote } from "../src/narrative/personality.js";
 import {
   buildWeakCareerChart,
   buildMixedCareerChart,
@@ -146,7 +147,7 @@ function allFindingsFor(chart: ChartData): Finding[] {
 // references/..." pointers, "Note:"-prefixed asides, and process language that
 // addresses whoever audits/builds the system rather than the person reading
 // about their own chart.
-const FORBIDDEN_PATTERNS: RegExp[] = [
+const DEVELOPER_LANGUAGE_PATTERNS: RegExp[] = [
   /see references\//i,
   /\.md\b/i,
   /\bnote:\s/i,
@@ -155,12 +156,60 @@ const FORBIDDEN_PATTERNS: RegExp[] = [
   /\buniversal verdict\b/i,
 ];
 
-function assertNoDeveloperLanguage(findings: Finding[]) {
-  for (const f of findings) {
-    for (const pattern of FORBIDDEN_PATTERNS) {
-      expect(f.statement, `${f.id}: "${f.statement}"`).not.toMatch(pattern);
+// Added when Personality v1 was built (DECISIONS.md, 2026-07-30): a real
+// classical source (Phaladeepika Ch. 9) was researched and deliberately
+// rejected specifically because it was physiognomy-heavy with fear-coded/
+// moralizing content. This sweep proves that rejection reasoning actually
+// holds in this project's OWN generated output, not just in the source that
+// was declined -- the same principle-5 ("Never trade on fear") discipline
+// applied to code, not just to source selection.
+const FEAR_CODED_OR_PHYSIOGNOMY_PATTERNS: RegExp[] = [
+  /\beyes\b/i,
+  /\bthighs\b/i,
+  /\bfalsehood/i,
+  /\bsinful\b/i,
+  /\bkilling\b/i,
+  /\bdanger\b/i,
+  /\bdoom\b/i,
+  /\bcurse/i,
+  /\bwarn(ing)?\b/i,
+];
+
+/** Generic sweep over any reader-facing statement strings, not just `Finding`
+ *  objects -- Personality's notes (`narrative/personality.ts`) deliberately
+ *  don't produce `Finding`s at all (see that module's doc), so a
+ *  `Finding[]`-only helper couldn't have covered them. */
+function assertNoForbiddenLanguage(statements: string[], patterns: RegExp[]) {
+  for (const statement of statements) {
+    for (const pattern of patterns) {
+      expect(statement, `"${statement}"`).not.toMatch(pattern);
     }
   }
+}
+
+function assertNoDeveloperLanguage(findings: Finding[]) {
+  assertNoForbiddenLanguage(findings.map((f) => f.statement), DEVELOPER_LANGUAGE_PATTERNS);
+}
+
+// Every rasi and its real lord, per `data/signs.json` (Rahu/Ketu never lord a
+// rasi, so `LORD_EMPHASIS`'s entries for them in `narrative/personality.ts`
+// are unreachable via this path, not a gap). Covers every element/modality/
+// lord combination `lagnaTemperamentNote()`'s lookup tables can actually
+// produce, not just the golden chart's one Leo Lagna case.
+const SIGN_LORDS: [SignName, Graha][] = [
+  ["Aries", "Mars"], ["Taurus", "Venus"], ["Gemini", "Mercury"], ["Cancer", "Moon"],
+  ["Leo", "Sun"], ["Virgo", "Mercury"], ["Libra", "Venus"], ["Scorpio", "Mars"],
+  ["Sagittarius", "Jupiter"], ["Capricorn", "Saturn"], ["Aquarius", "Saturn"], ["Pisces", "Jupiter"],
+];
+
+function chartWithLagna(sign: SignName, lagnaLord: Graha, lagnaLordDignity: PlanetPosition["dignity"]): ChartData {
+  const chart = allNeutralChart();
+  return {
+    ...chart,
+    ascendant: { ...chart.ascendant, sign },
+    houseLords: { ...chart.houseLords, 1: { lord: lagnaLord, placedInHouse: chart.planets[lagnaLord]!.house } },
+    planets: { ...chart.planets, [lagnaLord]: planet({ graha: lagnaLord, ...chart.planets[lagnaLord]!, dignity: lagnaLordDignity }) },
+  };
 }
 
 describe("Finding statement sweep: no developer/process language leaks into reader-facing text", () => {
@@ -207,5 +256,31 @@ describe("Finding statement sweep: no developer/process language leaks into read
 
   it("all-neutral chart (every Mahapurusha ABSENT, Gajakesari/Kemadruma/Mangal Dosha ABSENT)", () => {
     assertNoDeveloperLanguage(allFindingsFor(allNeutralChart()));
+  });
+});
+
+describe("Personality note sweep: no Phaladeepika-style physiognomy or fear-coded language", () => {
+  it("real golden chart -- Lagna temperament + Lagna-lord notes", async () => {
+    const { chart } = await computeChart(
+      { date: "1983-04-23", time: "15:30", placeText: "Chennai, Tamil Nadu, India", precision: "exact_from_record" },
+      DEFAULT_ENGINE_SETTINGS
+    );
+    assertNoForbiddenLanguage(
+      [lagnaTemperamentNote(chart).statement, lagnaLordNote(chart).statement],
+      FEAR_CODED_OR_PHYSIOGNOMY_PATTERNS
+    );
+  });
+
+  it("every real Lagna sign/lord combination, at every dignity -- not just the golden chart's one Leo Lagna case", () => {
+    const dignities: PlanetPosition["dignity"][] = ["exalted", "own", "moolatrikona", "friend", "neutral", "enemy", "debilitated"];
+    for (const [sign, lord] of SIGN_LORDS) {
+      for (const dignity of dignities) {
+        const chart = chartWithLagna(sign, lord, dignity);
+        assertNoForbiddenLanguage(
+          [lagnaTemperamentNote(chart).statement, lagnaLordNote(chart).statement],
+          FEAR_CODED_OR_PHYSIOGNOMY_PATTERNS
+        );
+      }
+    }
   });
 });
