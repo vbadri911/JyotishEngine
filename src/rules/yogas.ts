@@ -13,8 +13,10 @@ import type { ChartData, Finding, Graha, YogaClassification } from "../types.js"
 import { ordinal } from "../util/ordinal.js";
 import { dignityPredicate } from "../util/dignityPredicate.js";
 import { GRAHA_DOMAINS } from "../findings/domainMapping.js";
+import signsData from "../../data/signs.json" with { type: "json" };
 
 const KENDRAS = [1, 4, 7, 10];
+const TRIKONAS = [1, 5, 9];
 
 let findingCounter = 0;
 function nextId(prefix: string): string {
@@ -297,6 +299,242 @@ export function detectMangalDosha(chart: ChartData): Finding {
 }
 
 // ---------------------------------------------------------------------------
+// Nabhasa Yogas (BPHS Ch. 35) -- sign/house-distribution patterns across all
+// seven classical grahas (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn --
+// Rahu/Ketu excluded, same convention Kemadruma's occupancy check and
+// yogas.md's own Musala description already use).
+//
+// archive.org's Santhanam-translation text SKILL.md cites for BPHS
+// truncates before reaching Ch. 35 in this project's own fetch tooling (past
+// Ch. 4) -- a real, checked, tooling limitation, not assumed. A second real
+// source was used instead: sanskritdocuments.org's English translation of
+// Ch. 34-45 (https://sanskritdocuments.org/doc_z_misc_sociology_astrology/
+// horaashaastraEng34-45.html), fetched directly, quoted with verse numbers
+// (vv.7-9), not from a secondary summary. Cross-checked, not blindly
+// trusted: its Sakata condition (v.9, "all grahas in Lagna and Yuvati
+// Bhava") independently matches what was already found for yogas.md's own
+// Shakata-collision fix (BPHS Ch. 35 names an unrelated Sakata, a
+// sign-pattern yoga) -- the same chapter, the same yoga, confirmed from two
+// separate fetches, giving real confidence in this source's fidelity before
+// relying on the rest of it.
+//
+// Deliberately a SUBSET of Ch. 35's ~32 named Nabhasa yogas, not
+// exhaustive: Mala/Bhujanga(Sarpa) Yoga (v.8, "3 Kendras occupied by
+// benefics/malefics") is EXCLUDED -- the fetched verse text itself leaves
+// genuinely ambiguous whether every occupant must be benefic/malefic or
+// merely that one is present, confirmed by asking the source directly to
+// clarify and receiving "the text ... does not explicitly state" in
+// response. yogas.md's own principle for exactly this situation ("when in
+// doubt, do not report... rather than over-report," Musala's caution)
+// applies -- this is a real acknowledged source ambiguity, not invented
+// caution. Revisit only with a cleaner primary-source quote.
+// ---------------------------------------------------------------------------
+
+const CLASSICAL_GRAHAS: Graha[] = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
+const SIGN_MODALITY: Record<string, string> = Object.fromEntries(signsData.signs.map((s) => [s.name, s.modality]));
+const NABHASA_CITATION = "BPHS Ch. 35 (Nabhasa Yogas), sanskritdocuments.org English translation";
+
+function classicalGrahaHouses(chart: ChartData): Record<Graha, number> {
+  return Object.fromEntries(CLASSICAL_GRAHAS.map((g) => [g, chart.planets[g].house])) as Record<Graha, number>;
+}
+
+/** Rajju/Musala/Nala: all seven classical grahas share a single sign modality. */
+function nabhasaModalityYoga(chart: ChartData, name: string, modality: "movable" | "fixed" | "dual", idPrefix: string): Finding {
+  const met = CLASSICAL_GRAHAS.every((g) => SIGN_MODALITY[chart.planets[g].sign] === modality);
+  return {
+    id: nextId(idPrefix),
+    domain: [],
+    statement: met
+      ? `${name} Yoga: all seven classical grahas (excluding Rahu/Ketu) occupy ${modality} signs.`
+      : `${name} Yoga: not present. The seven classical grahas are not all in ${modality} signs.`,
+    evidence: CLASSICAL_GRAHAS.map((g) => ({ path: `planets.${g}.sign`, value: chart.planets[g].sign })),
+    classification: met ? "EXACT" : "ABSENT",
+    citation: NABHASA_CITATION,
+    strength: met ? 0.7 : 0,
+    polarity: "neutral",
+  };
+}
+
+/** v.7: "All the grahas in movable rashis cause Rajju Yog." Classical
+ *  results are explicitly mixed (fond of wandering, charming, earns abroad
+ *  -- but also cruel/mischievous per the same source) -- polarity left
+ *  neutral rather than invented as purely positive or negative. */
+export function detectRajjuYoga(chart: ChartData): Finding {
+  return nabhasaModalityYoga(chart, "Rajju", "movable", "yoga-rajju");
+}
+
+/** v.7: "All the grahas in fixed rashis cause Musala Yog." yogas.md already
+ *  documents this as "commonly over-reported" -- the strict all-seven check
+ *  here is exactly the discipline that entry calls for. */
+export function detectMusalaYoga(chart: ChartData): Finding {
+  return nabhasaModalityYoga(chart, "Musala", "fixed", "yoga-musala");
+}
+
+/** v.7: "All the grahas in dual rashis cause Nala Yog." No confirmed
+ *  classical life-results were found in the fetched source for this one
+ *  specifically -- polarity left neutral rather than invented. */
+export function detectNalaYoga(chart: ChartData): Finding {
+  return nabhasaModalityYoga(chart, "Nala", "dual", "yoga-nala");
+}
+
+/** v.9: "If all the grahas occupy two successive Kendras, Gada Yog is
+ *  formed." Checked against all four successive Kendra pairs (1+4, 4+7,
+ *  7+10, 10+1) -- disjoint from Vihaga's specific 4th+10th pair below (4 and
+ *  10 are opposite, not successive, in the 1-4-7-10 cycle). */
+export function detectGadaYoga(chart: ChartData): Finding {
+  const houses = classicalGrahaHouses(chart);
+  const successivePairs: [number, number][] = [[1, 4], [4, 7], [7, 10], [10, 1]];
+  const matched = successivePairs.find(([a, b]) => CLASSICAL_GRAHAS.every((g) => houses[g] === a || houses[g] === b));
+
+  return {
+    id: nextId("yoga-gada"),
+    domain: [],
+    statement: matched
+      ? `Gada Yoga: all seven classical grahas (excluding Rahu/Ketu) are confined to the ${ordinal(matched[0])} and ${ordinal(matched[1])} houses, two successive Kendras.`
+      : "Gada Yoga: not present. The seven classical grahas are not confined to two successive Kendra houses.",
+    evidence: CLASSICAL_GRAHAS.map((g) => ({ path: `planets.${g}.house`, value: houses[g] })),
+    classification: matched ? "EXACT" : "ABSENT",
+    citation: NABHASA_CITATION,
+    strength: matched ? 0.7 : 0,
+    polarity: "neutral",
+  };
+}
+
+/** v.9: "If all confine to Bandhu [4th] and Karm [10th] Bhava, then Vihag
+ *  Yog occurs." A specific pair, not "any two successive Kendras" -- 4th
+ *  and 10th are opposite each other in the Kendra cycle, so this is disjoint
+ *  from every Gada Yoga pairing above, not a special case of it. */
+export function detectVihagaYoga(chart: ChartData): Finding {
+  const houses = classicalGrahaHouses(chart);
+  const met = CLASSICAL_GRAHAS.every((g) => houses[g] === 4 || houses[g] === 10);
+
+  return {
+    id: nextId("yoga-vihaga"),
+    domain: [],
+    statement: met
+      ? "Vihaga Yoga: all seven classical grahas (excluding Rahu/Ketu) are confined to the 4th and 10th houses."
+      : "Vihaga Yoga: not present. The seven classical grahas are not confined to the 4th and 10th houses.",
+    evidence: CLASSICAL_GRAHAS.map((g) => ({ path: `planets.${g}.house`, value: houses[g] })),
+    classification: met ? "EXACT" : "ABSENT",
+    citation: NABHASA_CITATION,
+    strength: met ? 0.7 : 0,
+    polarity: "neutral",
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Raja Yoga (BPHS Ch. 39, vv.1-7 -- sanskritdocuments.org's translation,
+// same source and fetch-limitation note as the Nabhasa yogas above)
+// ---------------------------------------------------------------------------
+
+/**
+ * Ch. 39's own opening verses (vv.3-5) state TWO parallel methods together:
+ * a Jaimini-style Atmakaraka/Putrakaraka (Chara Karaka) method, and a
+ * rashi-lordship method ("the natal Lagna's lord and Putra's [5th] lord").
+ * Only the rashi-lordship method is implemented here -- Chara Karakas
+ * aren't computed anywhere in this project yet (SKILL.md's own "not yet
+ * done" table, Ch. 32-33, "a v1 addition"), so the Jaimini method is out of
+ * scope, not silently approximated.
+ *
+ * yogas.md's own three simplified sub-forms, each implemented directly:
+ *   1. A Kendra-house lord and a Trikona-house lord occupying the same
+ *      house together (conjunction).
+ *   2. A Kendra-house lord and Trikona-house lord in mutual Kendra
+ *      positions from each other (opposite houses -- the universal 7th-
+ *      house aspect is symmetric for any pair exactly 7 houses/6 apart,
+ *      unlike the special aspects, so this stays unambiguous without
+ *      needing aspectedHouses()'s asymmetric special-offset cases).
+ *   3. The Lagna lord specifically -- uniquely both Kendra (1st) AND
+ *      Trikona (1st) lord at once -- placed in a notably dignified
+ *      position. Ch. 39 v.13 (implied) supports this reading directly for
+ *      Lagna; NOT generalized to other houses that happen to share a lord
+ *      between one Kendra and one Trikona (e.g. 4th/9th sharing a lord for
+ *      some Lagna) -- that coincidence has no independent classical
+ *      significance the way Lagna's structural dual role does, and
+ *      inventing it would be an unstated generalization.
+ * A broad, well-populated category by BPHS's own framing -- reports which
+ * SPECIFIC combination was found (yogas.md's own caution against a single
+ * "the Raja Yoga" verdict), one Finding per qualifying planet pair, deduped
+ * by planet identity (not by which house pairing discovered it) so the
+ * same two grahas are never reported twice via two different Kendra/Trikona
+ * house routes.
+ */
+export function detectRajaYoga(chart: ChartData): Finding[] {
+  const findings: Finding[] = [];
+  const seenPairs = new Set<string>();
+
+  for (const kendraHouse of KENDRAS) {
+    for (const trikonaHouse of TRIKONAS) {
+      if (kendraHouse === trikonaHouse) continue; // Lagna's dual role, handled separately below
+      const kendraLord = chart.houseLords[kendraHouse]!.lord;
+      const trikonaLord = chart.houseLords[trikonaHouse]!.lord;
+      if (kendraLord === trikonaLord) continue; // one planet coincidentally owning both -- not Lagna's structural case, not generalized
+
+      const pairKey = [kendraLord, trikonaLord].sort().join("+");
+      if (seenPairs.has(pairKey)) continue;
+
+      const kendraLordPlanet = chart.planets[kendraLord];
+      const trikonaLordPlanet = chart.planets[trikonaLord];
+      const conjunct = kendraLordPlanet.house === trikonaLordPlanet.house;
+      const mutualKendra = Math.abs(kendraLordPlanet.house - trikonaLordPlanet.house) === 6;
+      if (!conjunct && !mutualKendra) continue;
+
+      seenPairs.add(pairKey);
+      findings.push({
+        id: nextId("yoga-raja"),
+        domain: ["career"],
+        statement: conjunct
+          ? `Raja Yoga: ${ordinal(kendraHouse)} lord ${kendraLord} and ${ordinal(trikonaHouse)} lord ${trikonaLord} occupy the same (${ordinal(kendraLordPlanet.house)}) house together.`
+          : `Raja Yoga: ${ordinal(kendraHouse)} lord ${kendraLord} and ${ordinal(trikonaHouse)} lord ${trikonaLord} are in mutual Kendra positions from each other, in the ${ordinal(kendraLordPlanet.house)} and ${ordinal(trikonaLordPlanet.house)} houses.`,
+        evidence: [
+          { path: `houseLords.${kendraHouse}.lord`, value: kendraLord },
+          { path: `houseLords.${trikonaHouse}.lord`, value: trikonaLord },
+          { path: `planets.${kendraLord}.house`, value: kendraLordPlanet.house },
+          { path: `planets.${trikonaLord}.house`, value: trikonaLordPlanet.house },
+        ],
+        classification: "EXACT",
+        citation: "BPHS Ch. 39 (Raja Yoga), rashi-lordship method only -- Jaimini/Chara Karaka method not implemented",
+        strength: 0.8,
+        polarity: "supportive",
+      });
+    }
+  }
+
+  const lagnaLord = chart.houseLords[1]!.lord;
+  const lagnaLordPlanet = chart.planets[lagnaLord];
+  if (["exalted", "own", "moolatrikona"].includes(lagnaLordPlanet.dignity)) {
+    findings.push({
+      id: nextId("yoga-raja"),
+      domain: ["career"],
+      statement: `Raja Yoga: the Lagna lord ${lagnaLord} -- simultaneously Kendra and Trikona lord -- is ${dignityPredicate(lagnaLordPlanet.dignity)} in ${lagnaLordPlanet.sign}.`,
+      evidence: [
+        { path: "houseLords.1.lord", value: lagnaLord },
+        { path: `planets.${lagnaLord}.dignity`, value: lagnaLordPlanet.dignity },
+      ],
+      classification: "EXACT",
+      citation: "BPHS Ch. 39 (Raja Yoga), rashi-lordship method only -- Jaimini/Chara Karaka method not implemented",
+      strength: 0.85,
+      polarity: "supportive",
+    });
+  }
+
+  if (findings.length === 0) {
+    findings.push({
+      id: nextId("yoga-raja"),
+      domain: [],
+      statement: "Raja Yoga: not present. No Kendra-lord/Trikona-lord conjunction, mutual-Kendra aspect, or dignified dual Lagna-lord combination was found in this chart.",
+      evidence: [],
+      classification: "ABSENT",
+      citation: "BPHS Ch. 39 (Raja Yoga), rashi-lordship method only -- Jaimini/Chara Karaka method not implemented",
+      strength: 0,
+      polarity: "neutral",
+    });
+  }
+
+  return findings;
+}
+
+// ---------------------------------------------------------------------------
 // Aggregate entry point
 // ---------------------------------------------------------------------------
 
@@ -306,5 +544,11 @@ export function detectAllCoreYogas(chart: ChartData): Finding[] {
     detectGajakesariYoga(chart),
     detectKemadrumaYoga(chart),
     detectMangalDosha(chart),
+    detectRajjuYoga(chart),
+    detectMusalaYoga(chart),
+    detectNalaYoga(chart),
+    detectGadaYoga(chart),
+    detectVihagaYoga(chart),
+    ...detectRajaYoga(chart),
   ];
 }

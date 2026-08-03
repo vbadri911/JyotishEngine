@@ -51,17 +51,25 @@ describe("buildOverviewDocumentContent: real golden chart", () => {
     expect(sun.house).toBe(9);
     expect(sun.dignity).toBe("exalted");
 
-    // All 8 yoga/dosha detections (5 Mahapurusha + Gajakesari + Kemadruma +
-    // Mangal Dosha) must be present, INCLUDING absences -- SKILL.md: "Report
-    // notable absences explicitly... informative and often reassuring."
-    expect(content.yogaRows).toHaveLength(8);
+    // 18 yoga/dosha detections as of 2026-08-01 (5 Mahapurusha + Gajakesari +
+    // Kemadruma + Mangal Dosha + 5 Nabhasa [Rajju/Musala/Nala/Gada/Vihaga] +
+    // 6 Raja Yoga combinations for this golden chart) must be present,
+    // INCLUDING absences -- SKILL.md: "Report notable absences explicitly...
+    // informative and often reassuring."
+    expect(content.yogaRows).toHaveLength(18);
     expect(content.yogaRows.some((r) => r.classification === "EXACT" && r.statement.includes("Malavya"))).toBe(true);
     expect(content.yogaRows.some((r) => r.classification === "ABSENT")).toBe(true);
+    expect(content.yogaRows.filter((r) => r.statement.startsWith("Raja Yoga:") && r.classification === "EXACT")).toHaveLength(5);
 
     expect(content.domainSections.map((s) => s.label)).toEqual(["Career", "Wealth", "Health", "Relationships", "Purpose", "Timing"]);
     // Overview depth: a full paragraph (lead-in + quoted findings), not essence's single sentence.
     expect(content.domainSections[0]!.text.length).toBeGreaterThan(80);
-    expect(content.domainSections[0]!.text).toContain("Sasa Yoga");
+    // Sasa's own STRONG_NOT_TEXTBOOK finding no longer makes Career's overview
+    // cap -- Raja Yoga's real EXACT findings for this chart (0.8-0.85 each)
+    // now outrank it (0.6); Sasa still appears at "full" depth (see
+    // render.test.ts's golden-chart Career suite).
+    expect(content.domainSections[0]!.text).toContain("Raja Yoga");
+    expect(content.domainSections[0]!.text).not.toContain("Sasa Yoga");
 
     expect(content.settingsDisclosure).toContain("Lahiri");
   });

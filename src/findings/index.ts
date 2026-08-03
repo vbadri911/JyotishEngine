@@ -21,10 +21,11 @@ import { DateTime } from "luxon";
 import type { ChartData, Domain, Finding, Graha, Polarity } from "../types.js";
 import type { DashaComputationResult } from "../engine/dasha.js";
 import { findActivePeriod } from "../engine/dasha.js";
+import { aspectedHouses } from "../engine/houses.js";
 import { ordinal } from "../util/ordinal.js";
 import { dignityPredicate } from "../util/dignityPredicate.js";
 import { formatUtcDate } from "../util/formatUtcDate.js";
-import { GRAHA_DOMAINS } from "./domainMapping.js";
+import { GRAHA_DOMAINS, GRAHA_BODY_PARTS, NATURAL_MALEFICS } from "./domainMapping.js";
 
 let counter = 0;
 function nextId(prefix: string): string {
@@ -157,6 +158,108 @@ export function combustionFindings(chart: ChartData): Finding[] {
 }
 
 /**
+ * Health's third named factor, "planetary body-part associations"
+ * (interpretation.md) -- BACKLOG.md flagged this gap: the mapping already
+ * existed in constants.md's Karakas table, just never turned into a
+ * Finding. One finding per graha with BOTH a notable dignity (same
+ * NOTABLE_DIGNITIES set dignityFindings() uses) AND a body-part entry
+ * (GRAHA_BODY_PARTS) -- Rahu/Ketu excluded, no entry exists for them.
+ * Interpretation.md's own non-diagnosis sensitivity requirement is carried
+ * by Health's existing unconditional closing note (templates/en/health.json),
+ * not repeated inside this statement -- the same lesson the Mangal Dosha
+ * "see references/yogas.md" leak already taught (DECISIONS.md): a caveat
+ * meant for the interpretation LAYER does not belong inside a reader-facing
+ * Finding.statement itself.
+ *
+ * Statement is deliberately TWO independent sentences, not one fused
+ * clause, per a real fluency issue caught 2026-08-01: an earlier version
+ * read "Sun is exalted in Aries -- classically associated with bones and
+ * eyes," which implies the exaltation is WHY Sun is associated with bones
+ * and eyes. It isn't -- the karaka association is a permanent fact of the
+ * graha, true regardless of dignity; only the TENDENCY (resilience vs.
+ * needing attention) is placement-dependent. Sentence 1 states the
+ * permanent fact alone; sentence 2 states the dignity and explicitly
+ * attributes the tendency (not the association itself) to it.
+ */
+export function bodyPartFindings(chart: ChartData): Finding[] {
+  const findings: Finding[] = [];
+  for (const planet of Object.values(chart.planets)) {
+    if (!NOTABLE_DIGNITIES.has(planet.dignity)) continue;
+    const bodyPart = GRAHA_BODY_PARTS[planet.graha];
+    if (!bodyPart) continue;
+
+    const polarity = DIGNITY_POLARITY[planet.dignity] ?? "neutral";
+    const tendencyClause =
+      polarity === "supportive" ? "suggesting general resilience in this area" : "suggesting this may be an area worth general attention";
+
+    findings.push({
+      id: nextId("body-part"),
+      domain: ["health"],
+      statement: `${planet.graha} is classically associated with ${bodyPart}. ${planet.graha} is ${dignityPredicate(planet.dignity)} in ${planet.sign}, ${tendencyClause}.`,
+      evidence: [
+        { path: `planets.${planet.graha}.dignity`, value: planet.dignity },
+        { path: `planets.${planet.graha}.sign`, value: planet.sign },
+      ],
+      strength: DIGNITY_STRENGTH[planet.dignity] ?? 0.5,
+      polarity,
+    });
+  }
+  return findings;
+}
+
+const HOUSE_AFFLICTION_TARGETS: { house: number; domain: Domain; idPrefix: string; framing: string }[] = [
+  { house: 6, domain: "health", idPrefix: "house-affliction-6", framing: "this chart's patterns around daily obstacles, service, and competition" },
+  { house: 8, domain: "health", idPrefix: "house-affliction-8", framing: "this chart's patterns around transformation and resilience" },
+  { house: 7, domain: "relationships", idPrefix: "house-affliction-7", framing: "this chart's partnership dynamics" },
+];
+
+/**
+ * Health's second named factor, "afflictions to 6th/8th," and Relationships'
+ * "aspects onto the 7th" (interpretation.md) -- previously only meant "the
+ * house lord's own dignity" (houseLordFindings()), which covers neither
+ * which planets OCCUPY nor which ASPECT those houses (BACKLOG.md). Reuses
+ * aspectedHouses() (already implemented, already tested) -- no new
+ * primitive needed, just a new consumer of one that already existed.
+ *
+ * "Affliction" here means occupancy or aspect by a natural malefic
+ * (NATURAL_MALEFICS: Saturn, Mars, Rahu, Ketu) -- a disclosed implementation
+ * choice, not asserted as settled classical fact; see constants.md's
+ * "Natural malefics and benefics" section (2026-08-01) for why Sun/Mercury/
+ * Moon are excluded. The disclosure lives there and in DECISIONS.md, not
+ * inside this function's reader-facing statement text, for the same reason
+ * bodyPartFindings() keeps the non-diagnosis caveat out of its own text.
+ */
+export function houseAfflictionFindings(chart: ChartData): Finding[] {
+  const findings: Finding[] = [];
+  for (const { house, domain, idPrefix, framing } of HOUSE_AFFLICTION_TARGETS) {
+    const clauses: string[] = [];
+    const evidence: Finding["evidence"] = [];
+
+    for (const planet of Object.values(chart.planets)) {
+      if (!NATURAL_MALEFICS.has(planet.graha)) continue;
+      if (planet.house === house) {
+        clauses.push(`${planet.graha} occupies it`);
+        evidence.push({ path: `planets.${planet.graha}.house`, value: planet.house });
+      } else if (aspectedHouses(planet.graha, planet.house).includes(house)) {
+        clauses.push(`${planet.graha} aspects it from the ${ordinal(planet.house)} house`);
+        evidence.push({ path: `planets.${planet.graha}.house`, value: planet.house });
+      }
+    }
+    if (clauses.length === 0) continue;
+
+    findings.push({
+      id: nextId(idPrefix),
+      domain: [domain],
+      statement: `The ${ordinal(house)} house is afflicted: ${clauses.join(", and ")} -- relevant to ${framing}.`,
+      evidence,
+      strength: 0.55,
+      polarity: "challenging",
+    });
+  }
+  return findings;
+}
+
+/**
  * The currently-active dasha period (Mahadasha -> Antardasha -> Pratyantardasha),
  * as of `asOfISO` (defaults to real current time -- this is inherently a
  * "what's true right now" fact, not a property of the birth chart itself).
@@ -210,6 +313,8 @@ export function aggregateFindings(
     ...dignityFindings(chart),
     ...houseLordFindings(chart),
     ...combustionFindings(chart),
+    ...bodyPartFindings(chart),
+    ...houseAfflictionFindings(chart),
     ...(current ? [current] : []),
   ];
 }

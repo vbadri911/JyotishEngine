@@ -25,3 +25,35 @@ export const GRAHA_DOMAINS: Partial<Record<Graha, Domain[]>> = {
   Jupiter: ["wealth", "relationships"],
   Venus: ["wealth", "relationships"],
 };
+
+/**
+ * constants.md's Karakas table, body-part column only -- interpretation.md
+ * names "planetary body-part associations" as Health's third factor
+ * (BACKLOG.md), and this data was already written down there, just never
+ * turned into a Finding. Rahu/Ketu deliberately absent: constants.md's table
+ * gives them no body-part entry, and inventing one would repeat the exact
+ * failure mode GRAHA_DOMAINS's own doc already warns against.
+ */
+export const GRAHA_BODY_PARTS: Partial<Record<Graha, string>> = {
+  Sun: "bones and eyes",
+  Moon: "bodily fluids",
+  Mars: "blood",
+  Mercury: "the nervous system and skin",
+  Jupiter: "the liver and fat metabolism",
+  Venus: "the kidneys",
+  Saturn: "bones, joints, and chronic conditions",
+};
+
+/**
+ * Natural malefics (Papa Graha) used for Health's 6th/8th and Relationships'
+ * 7th occupancy/aspect affliction findings -- see constants.md's new
+ * "Natural malefics and benefics" section (2026-08-01) for the full
+ * classical picture and why Sun/Mercury/Moon are deliberately excluded here
+ * (Sun: disputed status, not asserted either way; Mercury/Moon: genuinely
+ * conditional on factors this project doesn't compute for this purpose, a
+ * stronger reason than mere disagreement). This is a disclosed
+ * implementation choice, not settled classical fact -- surfaced in the
+ * affliction findings' own statement text, the same way Mangal Dosha's
+ * Lagna-based reference point is disclosed rather than assumed universal.
+ */
+export const NATURAL_MALEFICS: ReadonlySet<Graha> = new Set(["Saturn", "Mars", "Rahu", "Ketu"]);

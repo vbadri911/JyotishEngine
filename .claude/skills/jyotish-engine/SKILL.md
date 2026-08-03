@@ -126,6 +126,18 @@ Chapters already checked against this project: Ch. 3 (dignities, moolatrikona, c
 natural friendships), Ch. 4 (signs, Navamsa and other varga construction), Ch. 46 (Vimshottari
 dasha years and sequence), Ch. 75 (Pancha Mahapurusha yoga names).
 
+**Not everything in this skill is BPHS-sourced, and treating it as such is itself a risk this
+project has already been caught by once (see `references/yogas.md`'s Shakata Yoga entry,
+DECISIONS.md 2026-08-01): BPHS names its OWN "Sakata" (a different, Nabhasa/sign-pattern yoga,
+Ch. 35) that is unrelated to, and must not be conflated with, this project's actual Shakata Yoga,
+which is real but sourced from a different classical text entirely.** When a fact isn't in BPHS,
+check whether it belongs to **Phaladeepika (Mantreswara)** before assuming it's uncitable —
+already the correct primary source for this project's Lagna-sign temperament content
+(`references/personality.md`) and its Shakata Yoga condition (`references/yogas.md`), both fetched
+from wisdomlib.org's Sanskrit + English text-and-translation (`https://www.wisdomlib.org/hinduism/book/phaladeepika-by-mantreswara-text-and-translation/`,
+chapter-numbered sub-pages) — check that source directly by chapter/sloka the same way BPHS is
+checked here, not from a secondary summary, before trusting any new Phaladeepika-attributed claim.
+
 Chapters relevant to work **not yet done** — check here first rather than re-deriving from
 secondary sources when these become active work:
 

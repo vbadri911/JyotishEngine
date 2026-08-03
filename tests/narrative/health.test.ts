@@ -26,16 +26,26 @@ function weakHealthFindings() {
 }
 
 /**
- * Health's structure caps out at exactly THREE possible substantive findings
- * (see fixtures.ts's module doc): dignityFindings() only tags health for the
- * Lagna lord, and houseLordFindings() only tags health for houses 1/6/8. The
- * Lagna lord IS by definition the 1st house's lord, so the Lagna-lord dignity
- * finding and the 1st-lord house-lord finding always dedupe into one -- there
- * is structurally no way for Health to ever produce more than 3 deduped
- * findings (vitality/1st, illness/6th, longevity/8th). That ceiling sits at
- * the OVERVIEW_QUOTE_CAP itself, so "full has more to say than overview"
- * (exercised for other domains) can never happen here by construction --
- * confirmed, not assumed, in the tests below.
+ * UPDATE 2026-08-01, per Piece A (DECISIONS.md): the claim below ("Health
+ * structurally caps at 3 findings") was true through P5, but is no longer --
+ * bodyPartFindings() and houseAfflictionFindings() (findings/index.ts) both
+ * add real, additional Health-tagged findings this fixture/golden-chart set
+ * predates. `weakHealthFindings()` below still uses ONLY
+ * dignityFindings()/houseLordFindings()/combustionFindings()/
+ * detectAllCoreYogas() deliberately -- it is a fixture for testing
+ * render.ts's OWN mechanism (tiering, capping, dedup) in isolation, not a
+ * claim that a real chart's Health section is still capped at 3. The golden
+ * chart's own real Health section (below) now legitimately exceeds 3 -- see
+ * the new tests confirming this directly, not assuming the old comment still
+ * held.
+ *
+ * Original note, retained for the fixture-specific claim that's still true:
+ * dignityFindings() only tags health for the Lagna lord, and
+ * houseLordFindings() only tags health for houses 1/6/8. The Lagna lord IS by
+ * definition the 1st house's lord, so the Lagna-lord dignity finding and the
+ * 1st-lord house-lord finding always dedupe into one -- `weakHealthFindings()`
+ * (using only the four pre-Piece-A generators) is still capped at exactly 3
+ * for that reason, which is what the fixture-based tests below verify.
  */
 
 describe("renderDomainSection: golden chart Health (real 'strong' tier -- Lagna-lord Sun + 6th-lord Saturn, both exalted)", () => {
@@ -67,6 +77,26 @@ describe("renderDomainSection: golden chart Health (real 'strong' tier -- Lagna-
     const section = renderDomainSection("health", findings, "essence", template);
     expect(section.text).not.toMatch(/house\s*\d/i);
     expect(template.essence.strong).toContain(section.text);
+  });
+
+  it("Piece A: full depth now also cites real body-part associations (Sun, Saturn, Venus, Mars), not just dignity/house-lord findings", async () => {
+    const findings = await goldenFindings();
+    const full = renderDomainSection("health", findings, "full", template);
+    expect(full.text).toContain("classically associated with bones and eyes"); // Sun, exalted
+    expect(full.text).toContain("classically associated with bones, joints, and chronic conditions"); // Saturn, exalted
+    expect(full.text).toContain("classically associated with the kidneys"); // Venus, own sign
+    expect(full.text).toContain("classically associated with blood"); // Mars, own sign
+  });
+
+  it("Piece A: no 6th/8th-house occupancy/aspect affliction finding for this chart -- confirmed real absence, not an oversight", async () => {
+    // Saturn(house 3), Mars(house 9), Rahu(house 11), Ketu(house 5): none of
+    // the four natural malefics occupies or aspects house 6 or 8 in this
+    // chart's real positions (checked directly against aspects.json's real
+    // offsets, tests/findings.test.ts's houseAfflictionFindings suite proves
+    // the mechanism itself works on a chart where it should fire).
+    const findings = await goldenFindings();
+    const full = renderDomainSection("health", findings, "full", template);
+    expect(full.text).not.toContain("house is afflicted");
   });
 });
 

@@ -50,6 +50,17 @@ describe("renderDomainSection: golden chart Relationships (real 'strong' tier --
     expect(section.text).not.toMatch(/house\s*\d/i);
     expect(section.text).toBe("Relationships and partnership are a genuine strength in this chart.");
   });
+
+  it("Piece A: no 7th-house occupancy/aspect affliction finding for this chart -- confirmed real absence, not an oversight", async () => {
+    // Saturn(house 3), Mars(house 9), Rahu(house 11), Ketu(house 5): none of
+    // the four natural malefics occupies or aspects house 7 in this chart's
+    // real positions (checked against aspects.json's real offsets --
+    // tests/findings.test.ts's houseAfflictionFindings suite proves the
+    // mechanism itself works on a chart where it should fire).
+    const findings = await goldenFindings();
+    const full = renderDomainSection("relationships", findings, "full", template);
+    expect(full.text).not.toContain("house is afflicted");
+  });
 });
 
 describe("renderDomainSection: hand-built weak Relationships fixture (real triggered Mangal Dosha + debilitated 5th/7th lords)", () => {

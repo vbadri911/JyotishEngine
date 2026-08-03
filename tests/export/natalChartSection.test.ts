@@ -44,9 +44,10 @@ describe("buildNatalChartSectionContent: real golden chart", () => {
     expect(content.houseNotes.some((n) => n.house === 4)).toBe(true);
     expect(content.houseNotes.some((n) => n.house === 12)).toBe(true);
 
-    // Same 8 yoga/dosha rows Overview already validates (5 Mahapurusha +
-    // Gajakesari + Kemadruma + Mangal Dosha), including ABSENT.
-    expect(content.yogaRows).toHaveLength(8);
+    // Same 18 yoga/dosha rows Overview already validates as of 2026-08-01
+    // (5 Mahapurusha + Gajakesari + Kemadruma + Mangal Dosha + 5 Nabhasa +
+    // 5 Raja Yoga for this golden chart), including ABSENT.
+    expect(content.yogaRows).toHaveLength(18);
     expect(content.yogaRows.some((r) => r.classification === "ABSENT")).toBe(true);
 
     expect(content.settingsDisclosure).toContain("Lahiri");
