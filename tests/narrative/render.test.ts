@@ -65,36 +65,74 @@ describe("renderDomainSection: golden chart (rich, all-supportive Career)", () =
       "Saturn is exalted in the 3rd house -- a strong placement, but not Sasa Yoga, since the 3rd house is not a Kendra."
     );
     expect(section.text).not.toContain("6th lord Saturn");
-    expect(section.text).not.toContain("1st lord Sun");
+    // Sun's Lagna-lord-dignity finding is now itself absorbed by Raja Yoga's
+    // Lagna-lord special case (yoga beats Lagna-lord-dignity beats house-lord,
+    // richnessRank's existing chain -- Raja Yoga just occupies rank 0 too, per
+    // "classification !== undefined"), so the OLD redundant plain restatement
+    // never appears. "1st lord Sun" itself is no longer a safe substring to
+    // ban outright: Raja Yoga's OWN, non-redundant statement about Sun's ROLE
+    // as 1st-house lord (conjunct with 9th-lord Mars) legitimately uses this
+    // exact phrase for a different fact than dignity -- ban the specific old
+    // redundant sentence instead.
+    expect(section.text).not.toContain("1st lord Sun is placed in Aries, in the 9th house, and is exalted.");
     // Malavya/Ruchaka no longer belong to Career at all (see domain-tag audit above).
     expect(section.text).not.toContain("Malavya");
     expect(section.text).not.toContain("Ruchaka");
   });
 
-  it("full's text is identical to overview's -- exactly 3 deduped supportive findings, all within the cap, nothing left to add", async () => {
+  /**
+   * UPDATE 2026-08-01 (Piece B, DECISIONS.md): this chart's real Raja Yoga
+   * combinations (5 EXACT findings -- the Lagna-lord Sun's dual Kendra/
+   * Trikona role, plus 4 Kendra-lord/Trikona-lord conjunctions and mutual-
+   * Kendra pairs) push Career well past the old "exactly 3, nothing left to
+   * add" shape this test asserted before Raja Yoga existed. Overview's cap
+   * (3) still holds -- Raja Yoga just now supplies the top strengths that
+   * fill it, displacing what used to be there. Full now genuinely has more
+   * to add beyond overview, verified against real output, not assumed.
+   */
+  it("full's text extends overview's with 4 more Raja Yoga findings and Saturn's Sasa (STRONG_NOT_TEXTBOOK) -- overview's 3-finding cap still holds, full has real additional content now", async () => {
     const findings = await goldenFindings();
     const overview = renderDomainSection("career", findings, "overview", template);
     const full = renderDomainSection("career", findings, "full", template);
 
-    // No challenging findings, so no closing note either -- these should be
-    // completely identical, not just prefix-related.
-    expect(full.text).toBe(overview.text);
     expect(overview.sourceFindingIds.length).toBe(3);
-    expect(full.sourceFindingIds.length).toBe(3);
-    expect(full.text).not.toContain("Beyond that");
-    expect(full.text).not.toContain("One more placement");
+    expect(full.sourceFindingIds.length).toBe(7);
+    expect(full.text.startsWith(overview.text)).toBe(true);
+    expect(full.text).not.toBe(overview.text);
+    expect(full.text).toContain("Beyond that, further support comes from:");
+    expect(full.text).toContain(
+      "Raja Yoga: 7th lord Saturn and 1st lord Sun are in mutual Kendra positions from each other, in the 3rd and 9th houses."
+    );
+    expect(full.text).toContain(
+      "Raja Yoga: 7th lord Saturn and 9th lord Mars are in mutual Kendra positions from each other, in the 3rd and 9th houses."
+    );
+    expect(full.text).toContain(
+      "Raja Yoga: 10th lord Venus and 5th lord Jupiter are in mutual Kendra positions from each other, in the 10th and 4th houses."
+    );
+    expect(full.text).toContain(
+      "Saturn is exalted in the 3rd house -- a strong placement, but not Sasa Yoga, since the 3rd house is not a Kendra."
+    );
   });
 
-  it("overview cites the Lagna-lord Sun, the 10th-lord Venus, and Saturn's Sasa (STRONG_NOT_TEXTBOOK)", async () => {
+  it("overview cites the Lagna-lord Sun (via Raja Yoga), the 10th-lord Venus, and the Sun+Mars Raja Yoga conjunction", async () => {
     const findings = await goldenFindings();
     const section = renderDomainSection("career", findings, "overview", template);
-    expect(section.text).toContain("Sun is exalted in Aries, in the 9th house, and is also the Lagna lord.");
+    // Sun's OWN plain Lagna-lord-dignity finding no longer surfaces standalone
+    // -- Raja Yoga's Lagna-lord special case (strength 0.85, classification
+    // EXACT) now absorbs it (same dignity evidence, higher rank), and states
+    // the same underlying fact (Sun exalted, Lagna lord) with more content.
+    expect(section.text).toContain(
+      "Raja Yoga: the Lagna lord Sun -- simultaneously Kendra and Trikona lord -- is exalted in Aries."
+    );
+    expect(section.text).not.toContain("Sun is exalted in Aries, in the 9th house, and is also the Lagna lord.");
     expect(section.text).toContain(
       "10th lord Venus is placed in Taurus, in the 10th house -- its own house, and is in its own sign."
     );
-    expect(section.text).toContain(
-      "Saturn is exalted in the 3rd house -- a strong placement, but not Sasa Yoga, since the 3rd house is not a Kendra."
-    );
+    expect(section.text).toContain("Raja Yoga: 1st lord Sun and 9th lord Mars occupy the same (9th) house together.");
+    // Sasa's STRONG_NOT_TEXTBOOK finding (strength 0.6) no longer makes the
+    // overview cap now that four real Raja Yoga findings (0.8-0.85) outrank
+    // it -- still present at full depth (see the "full's text extends..." test).
+    expect(section.text).not.toContain("Sasa Yoga");
   });
 
   it("essence depth contains no house numbers or jargon", async () => {
@@ -111,18 +149,45 @@ describe("renderDomainSection: golden chart (rich, all-supportive Career)", () =
   });
 });
 
-describe("renderDomainSection: hand-built weak/challenging Career fixture", () => {
-  it("full depth renders the 'challenging' tier and cites each underlying fact exactly once", () => {
+/**
+ * UPDATE 2026-08-01 (Piece B, DECISIONS.md): buildWeakCareerChart()'s own
+ * module doc (fixtures.ts) originally claimed "Career ends up with zero
+ * supportive findings" -- true for Mahapurusha yogas specifically, but Raja
+ * Yoga doesn't care about dignity at all, only which houses Kendra/Trikona
+ * lords occupy relative to each other. This exact chart's Aries Lagna +
+ * Sun-debilitated(house 7)+Saturn-debilitated(house 1) combination
+ * structurally produces two real Raja Yoga EXACT hits (Moon+Jupiter mutual
+ * Kendra; Saturn+Sun mutual Kendra) that have nothing to do with either
+ * planet's own weak dignity -- a genuine, checked structural consequence of
+ * adding Raja Yoga, not a bug, and not avoidable without changing which
+ * houses the fixture's already-load-bearing debilitated planets sit in.
+ * Tier is now "mixed," not "challenging" -- this fixture no longer exercises
+ * a purely-challenging Career path (buildMixedCareerChart() already covers
+ * "mixed" from a different angle); a fixture for purely-challenging Career
+ * specifically, if still wanted, needs a non-Aries Lagna to avoid this
+ * structural coincidence -- flagged in BACKLOG.md as a real, open gap, not
+ * silently absorbed.
+ */
+describe("renderDomainSection: hand-built weak Career fixture (now genuinely 'mixed' once Raja Yoga is considered, not 'challenging')", () => {
+  it("full depth renders the 'mixed' tier -- 2 real Raja Yoga EXACT findings alongside the 3 pre-existing challenging ones", () => {
     const findings = weakChartFindings();
     const section = renderDomainSection("career", findings, "full", template);
 
-    expect(section.text).toContain("Career carries real friction in this chart");
-    // Saturn's debilitation used to appear twice (standalone dignity finding +
-    // 10th-lord finding); now once, via the richer house-lord framing. "debilitated"
-    // itself legitimately appears 3 times -- Sun, Mars, and Saturn are three
-    // genuinely different planets, not a duplicated fact.
+    expect(section.text).toContain("Career shows a genuine mix here: real strengths sit alongside real friction points.");
+    expect(section.text).toContain(
+      "Raja Yoga: 4th lord Moon and 9th lord Jupiter are in mutual Kendra positions from each other, in the 9th and 3rd houses."
+    );
+    expect(section.text).toContain(
+      "Raja Yoga: 10th lord Saturn and 5th lord Sun are in mutual Kendra positions from each other, in the 1st and 7th houses."
+    );
+    // Saturn's debilitation (its OWN dignity/house-lord fact) still appears
+    // exactly once, via the richer house-lord framing -- distinct from Raja
+    // Yoga's separate statement about Saturn's ROLE as 10th-lord conjunct/
+    // mutual-Kendra with Sun, which legitimately mentions "Saturn" again for
+    // a different reason (not a dedup failure -- Raja Yoga's evidence never
+    // cites planets.Saturn.dignity, so it never competes in that cluster).
     expect(countOccurrences(section.text, "debilitated")).toBe(3);
-    expect(countOccurrences(section.text, "Saturn")).toBe(1);
+    expect(countOccurrences(section.text, "Saturn")).toBe(2);
     expect(section.text).toContain("10th lord Saturn is placed in Aries, in the 1st house, and is debilitated.");
     expect(section.text).not.toContain("Saturn is debilitated in Aries");
   });
@@ -151,16 +216,21 @@ describe("renderDomainSection: hand-built weak/challenging Career fixture", () =
     // Only Sasa (Saturn, GRAHA_DOMAINS-mapped to career) is career-tagged among the
     // Mahapurusha set post-audit -- Ruchaka/Bhadra/Hamsa/Malavya carry no Career tag
     // at all now, so they don't even reach this domain-filtered list, ABSENT or not.
-    expect(careerFindings).toHaveLength(6); // Sun/Saturn dignity + 3 house-lord + Sasa (ABSENT)
+    // 8 as of 2026-08-01: the original 6 (Sun/Saturn dignity + 3 house-lord +
+    // Sasa ABSENT) plus 2 real Raja Yoga EXACT findings (Moon+Jupiter,
+    // Saturn+Sun mutual Kendra -- see this describe block's own doc above).
+    expect(careerFindings).toHaveLength(8);
     const section = renderDomainSection("career", findings, "full", template);
     expect(section.text).not.toContain("Sasa Yoga: not present");
     expect(section.sourceFindingIds.length).toBeLessThan(careerFindings.length);
   });
 
-  it("essence depth uses the challenging-tier plain-language phrase, no house numbers", () => {
+  it("essence depth uses the mixed-tier plain-language phrase, no house numbers", () => {
     const findings = weakChartFindings();
     const section = renderDomainSection("career", findings, "essence", template);
-    expect(section.text).toBe("Career is an area this chart marks as needing sustained, deliberate effort rather than coming easily.");
+    expect(section.text).toBe(
+      "Career here combines real strength with real friction -- capability paired with placements that ask for extra effort."
+    );
     expect(section.text).not.toMatch(/house\s*\d/i);
   });
 });
@@ -305,6 +375,23 @@ describe("dedupeBySharedFact: explicit priority-chain test (real charts have onl
     const b = fake("b", "Statement B.", { evidence: [{ path: "planets.Venus.dignity", value: "own" }] });
     const result = dedupeBySharedFact([a, b]);
     expect(result).toHaveLength(2);
+  });
+
+  it("a bodyPartFindings() finding survives even when a richer Lagna-lord-dignity finding shares its exact dignity evidence -- real bug, found and fixed 2026-08-01", () => {
+    // Real defect, not contrived: bodyPartFindings() (findings/index.ts) cites
+    // the SAME planets.X.dignity fact a Lagna-lord dignity finding does, but
+    // says something genuinely different with it (which body system, not
+    // domain/Lagna-lord role). Before the fix, dignityEvidenceKey() clustered
+    // them together and richnessRank() (rank 1, "Lagna lord" in the text)
+    // silently dropped the body-part finding -- verified against the real
+    // golden chart (Sun's and Saturn's body-part findings were missing from
+    // rendered Health text) before this test was written.
+    const lagnaLordDignity = fake("dignity-fake-1", "Mars is exalted, and is also the Lagna lord.", { domain: ["health"] });
+    const bodyPart = fake("body-part-fake-2", "Mars is exalted in Aries -- classically associated with blood.", { domain: ["health"] });
+
+    const result = dedupeBySharedFact([lagnaLordDignity, bodyPart]);
+    expect(result).toHaveLength(2);
+    expect(result.map((f) => f.id).sort()).toEqual(["body-part-fake-2", "dignity-fake-1"]);
   });
 });
 

@@ -48,14 +48,25 @@ const BASE = {
  * Deliberately weak/afflicted for Career specifically: Aries Lagna (Mars
  * lord), with Sun (career graha), Saturn (career graha + 10th lord), and Mars
  * (1st lord) all debilitated. Every Mahapurusha yoga is ABSENT (no dignified
- * planet is in a Kendra). Career ends up with zero supportive findings and
- * several real challenging ones -- the specific shape needed to stress-test
- * "length follows data" (raw finding count is still ~10, same order of
- * magnitude as the golden chart's Career count, but the substantive signal
- * is almost entirely challenging, not supportive) and "never trade on fear"
- * (real affliction, not manufactured, must still render without fatalism).
- * See DECISIONS.md for the domain-coverage tally that led to Career as P5's
- * first domain and this fixture's specific construction.
+ * planet is in a Kendra).
+ *
+ * UPDATE 2026-08-01 (Piece B, DECISIONS.md): originally "Career ends up with
+ * zero supportive findings" -- true through P5, no longer true once Raja
+ * Yoga exists. Raja Yoga's Kendra-lord/Trikona-lord condition depends only
+ * on which HOUSES lords occupy relative to each other, not on any planet's
+ * own dignity -- and this exact chart's Aries-Lagna + Sun-debilitated(house
+ * 7) + Saturn-debilitated(house 1) combination structurally produces two
+ * real Raja Yoga EXACT hits (Moon+Jupiter mutual Kendra; Saturn+Sun mutual
+ * Kendra) that have nothing to do with either planet's weak dignity. Not
+ * avoidable by moving an unrelated planet: Sun's and Saturn's houses here
+ * are forced by their own debilitation signs under Aries Lagna, and both
+ * are load-bearing for other assertions (tests/narrative/render.test.ts).
+ * This fixture is now genuinely "mixed," not "challenging," for Career --
+ * still real, still useful stress-testing (real affliction alongside real
+ * unrelated structural strength, rendering without fatalism), just not the
+ * originally-intended zero-supportive case. A fixture for PURELY-challenging
+ * Career, if still wanted, needs a non-Aries Lagna to avoid this same
+ * structural coincidence -- open gap, tracked in BACKLOG.md, not solved here.
  */
 export function buildWeakCareerChart(): ChartData {
   return {

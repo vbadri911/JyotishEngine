@@ -117,6 +117,17 @@ function classifyTier(supportive: Finding[], challenging: Finding[]): DomainTier
  *  distinct facts) -- this is specifically the fact pattern that produced
  *  real, observed duplication ("Saturn exalted" stated three ways). */
 function dignityEvidenceKey(finding: Finding): string | null {
+  // bodyPartFindings() (findings/index.ts) cites the SAME planets.X.dignity
+  // fact a plain dignity/house-lord finding does, but says something
+  // genuinely different with it (which body system, not domain/Lagna-lord
+  // role) -- a real collision was found and verified against the golden
+  // chart (Sun's and Saturn's body-part findings were silently dropped by
+  // their richer dignity/house-lord siblings, 2026-08-01) where this
+  // function's "same fact stated differently" premise didn't actually hold.
+  // Excluded from clustering entirely, the same way a finding with no
+  // dignity evidence at all already is -- not a richnessRank tiebreak, since
+  // there's no real redundancy here to break a tie on.
+  if (finding.id.startsWith("body-part-")) return null;
   const entry = finding.evidence.find((e) => /^planets\.\w+\.dignity$/.test(e.path));
   return entry ? `${entry.path}=${JSON.stringify(entry.value)}` : null;
 }

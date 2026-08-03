@@ -127,9 +127,33 @@ sub-type) without dramatizing — consistent with the "never trade on fear" prin
 
 ## Shakata Yoga
 
-**Condition:** Moon in the 6th, 8th, or 12th house counted **from Jupiter**. Traditionally associated
-with fluctuating fortune. Cancelled or reduced if Jupiter is otherwise strong and well-aspected —
-treat as a mild caution rather than a severe affliction.
+**Name collision, resolved 2026-08-01 (see DECISIONS.md) -- read this before implementing.** BPHS
+Ch. 35 (Nabhasa yogas) also names a yoga called "Sakata," but it is a DIFFERENT condition from a
+DIFFERENT primary source than the one described below: BPHS's Nabhasa Sakata is a sign-pattern
+yoga (all seven classical grahas placed in the Lagna and the 7th house together), consistent with
+the other Nabhasa yogas' geometric-pattern character (compare Musala, below). It is **not
+implemented anywhere in this codebase** and is a separate, still-deferred item under Piece B's
+"Nabhasa yogas" scope if that is ever built -- do not conflate it with the yoga described below,
+and do not assume the citation below extends to it.
+
+**Condition (this project's actual "Shakata Yoga," verified against its real primary source --
+Phaladeepika by Mantreswara, Ch. 6 ("Yogas and their effects"), Sloka 14, via
+`https://www.wisdomlib.org/hinduism/book/phaladeepika-by-mantreswara-text-and-translation/d/doc1621578.html`,
+2026-08-01):** Moon in the 6th, 8th, or 12th house counted **from Jupiter**. Traditionally
+associated with fluctuating fortune -- success and failure alternating, not a fixed severe
+affliction.
+
+**Cancellation, corrected against the primary source (the previous version of this entry stated an
+uncited "Jupiter strong and well-aspected" cancellation that does not match Phaladeepika's own
+verse -- found and fixed while resolving the name collision, not carried forward uncritically):**
+the Moon being in a Kendra (1st/4th/7th/10th) **from the Lagna** negates the yoga, per the verse's
+own text ("if the Moon be in a Kendra house from the Lagna, there is no Sakata") -- the SAME
+Moon-in-Kendra-from-Lagna mechanism Kemadruma Yoga's own primary cancellation already uses in this
+project, not a new, separate cancellation rule to invent.
+
+Sloka 14 also names a related positive counter-configuration (a Moon exalted/own-sign/in a
+Jupiter-owned sign while still 6th/8th from Jupiter reportedly gives a favorable "Mukuta Yoga"
+instead) -- noted for completeness, not in scope to implement unless asked.
 
 ## Veshi / Vasi / Ubhayachari Yoga
 

@@ -114,6 +114,34 @@ dignity — implement natural friendship first; temporal is a refinement, not a 
 Note the asymmetry (e.g. Sun considers Mercury neutral, Mercury considers Sun a friend) — this is
 correct and expected; friendship in this system is not always mutual.
 
+### Natural malefics and benefics (Papa/Shubha Graha)
+
+Not previously documented in this file — added 2026-08-01 when a Health/Relationships
+affliction-finding feature needed it and a grep of this whole file turned up nothing, the same
+"missing foundational table" pattern already caught once for Personality's element/modality data.
+
+| Graha | Classical status | Note |
+|---|---|---|
+| Saturn | Malefic (Papa) | Near-universal agreement across traditions |
+| Mars | Malefic (Papa) | Near-universal agreement |
+| Rahu | Malefic (Papa) | Near-universal agreement (shadow point, not a physical graha) |
+| Ketu | Malefic (Papa) | Near-universal agreement (shadow point, not a physical graha) |
+| Jupiter | Benefic (Shubha) | Near-universal agreement |
+| Venus | Benefic (Shubha) | Near-universal agreement |
+| Sun | Disputed | Some traditions treat as a mild/soft malefic (cruel, Krura graha); others as neutral. Real, acknowledged school disagreement — do not assert either status as settled. |
+| Mercury | Conditional | Classically benefic when unassociated/alone; takes on the nature of a conjunct planet otherwise (Mercury is never independently malefic on its own placement the way Saturn/Mars are) |
+| Moon | Conditional | Classically benefic when waxing (Shukla Paksha, especially full); comparatively weaker/more challenging when waning (Krishna Paksha, especially new) — a phase-dependent status, not a fixed one |
+
+**This project's own implementation choice (Health/Relationships affliction findings,
+`findings/index.ts`), disclosed here rather than asserted as settled classical fact — the same
+disclosure standard Mangal Dosha's own Lagna-based reference-point choice already gets in
+`yogas.md`:** "affliction" for occupancy/aspect checks uses the four near-universal-agreement
+malefics only (Saturn, Mars, Rahu, Ketu). Sun is excluded by default given the real disputed status
+above. Mercury and Moon are excluded too, and for a stronger reason than Sun: their malefic/benefic
+status is not just disputed but genuinely conditional on other factors (association, phase) this
+project does not currently compute for this purpose — including them would require deciding and
+implementing that condition first, not just picking a side of a disagreement.
+
 ## Combustion (Astangata)
 
 A planet too close to the Sun loses independent expression. Orbs are **school-dependent — treat as

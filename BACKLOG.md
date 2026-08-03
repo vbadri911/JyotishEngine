@@ -181,18 +181,46 @@ See `README.md` for current status.
      separate sourcing pass. Tests include a negative check that no
      Phaladeepika-style physiognomy/fear-coded language reaches generated
      output.
-   **Not yet built**: Full Blueprint's own document/pagination pipeline (a
-   40-60 page PDF/DOCX assembly is a different problem than Essence/
-   Overview's single-digit-page ones -- likely deserves its own
-   library-validation-style gate before real code, same category as the one
-   Essence/Overview got); the free-tools cluster (needs this project's
-   first-ever UI-framework decision -- see below); and the Remedies section
-   (currently zero code -- even a v1 disclosure-only version, given
-   interpretation.md's remedy guardrails route most real recommendations to
-   "consult a practitioner" anyway, would be a defensible, much smaller
-   starting scope than a full remedy-generation engine).
+   **Full Blueprint pagination now built** (`src/export/fullDocument.ts`,
+   `fullPdf.ts`, `fullDocx.ts`) -- a real 7-of-8-section document (sections
+   1-7; section 8 explicitly marked not-yet-available, not omitted),
+   assembling sections 3-7 for the first time (`renderDomainSection`/
+   `renderTimingSection` at `full` depth existed and were tested, but nothing
+   had pulled them into one object before this). **Real, measured finding
+   (`DECISIONS.md`, 2026-07-31), then explicitly RE-measured after Piece A+B
+   widened the finding base (`DECISIONS.md`, 2026-08-02): the PDF is still 4
+   pages, not 40-60, unchanged despite total content growing ~32% (findings
+   22 -> 36, prose+table content 6,427 -> 8,466 chars).** This definitively
+   answers the question that motivated Piece A/B's fact-base-widening effort
+   in the first place: more finding-generator coverage does not meaningfully
+   close this gap. Root cause is architectural, confirmed complete not just
+   plausible -- P4's findings layer generates a bounded, evidence-only fact
+   set and P5's renderers only ever quote `Finding.statement` verbatim, never
+   regenerate/paraphrase; a 40-60 page document needs roughly 80,000-180,000
+   characters of body text, and even real, well-sourced content growth is a
+   rounding error against that gap. **Closing it for real, if wanted, needs a
+   genuinely different kind of full-depth content generation -- e.g. paid/
+   BYOK LLM elaboration over the existing evidence-grounded findings --
+   explicitly parked as its own future design conversation, not scoped or
+   started.** "Length follows data" (SKILL.md principle 3) may mean a shorter
+   Full Blueprint is simply correct; not decided.
+   **Not yet built**: the free-tools cluster (needs this project's
+   first-ever UI-framework decision, AND separately, real Panchang
+   computation -- zero tithi/vara/karana logic exists anywhere in this
+   codebase or its reference material, a new Jyotish-domain feature
+   independent of the framework choice); and the Remedies section (currently
+   zero code -- even a v1 disclosure-only version, given interpretation.md's
+   remedy guardrails route most real recommendations to "consult a
+   practitioner" anyway, would be a defensible, much smaller starting scope
+   than a full remedy-generation engine; watch for Lal Kitab vs. mainstream
+   Jyotish tradition-conflation when sourcing, the same class of risk as any
+   other school-mismatch this project already guards against).
 
 ## Known gaps
+
+- **RESOLVED 2026-08-01 (reference material only, see `DECISIONS.md`): `yogas.md`'s Shakata Yoga entry was mis-attributed.** BPHS Ch. 35 (Nabhasa yogas) names its own, unrelated "Sakata" (all seven grahas confined to the Lagna and 7th house together -- a sign-pattern condition, consistent with Musala/Rajju/etc.'s geometric character, not implemented anywhere in this codebase). This project's actual Shakata Yoga (Moon 6th/8th/12th from Jupiter) is real and was already correctly STATED in substance, but had no citation and turned out to come from a different primary text entirely -- **Phaladeepika (Mantreswara), Ch. 6 ("Yogas and their effects"), Sloka 14** (`https://www.wisdomlib.org/hinduism/book/phaladeepika-by-mantreswara-text-and-translation/d/doc1621578.html`), fetched and confirmed directly, not from a secondary summary. A second, smaller error surfaced in the same check: the entry's stated cancellation ("Jupiter otherwise strong and well-aspected") didn't match the verse's own text (Moon in Kendra from the LAGNA negates it -- the same mechanism Kemadruma Yoga's own primary cancellation already uses) -- corrected. `yogas.md` now states both the correct citation and an explicit non-conflation note. No code was affected -- `detectShakataYoga()` doesn't exist yet (see "Deferred features" above).
+
+- **Real, structural test-coverage gap surfaced while adding Raja Yoga (2026-08-01, DECISIONS.md): `tests/narrative/fixtures.ts`'s `buildWeakCareerChart()` no longer exercises a genuinely all-challenging ("zero supportive findings") Career case.** Its Aries-Lagna + Sun-debilitated(house 7) + Saturn-debilitated(house 1) combination structurally produces two real Raja Yoga EXACT hits (10th-lord Saturn + 5th-lord Sun mutual Kendra; among others depending on the other planets' placement) that are completely independent of either planet's own weak dignity -- not avoidable by moving an unrelated planet, since Sun's and Saturn's houses here are forced by their own debilitation signs under Aries Lagna, and both houses are load-bearing for other assertions. The fixture (and its tests) were updated to reflect its new, correct "mixed" classification rather than forcing an artificial workaround. A dedicated purely-challenging-Career fixture, if still wanted, needs a non-Aries Lagna chosen specifically to avoid this same structural coincidence -- not built, since it wasn't asked for and `buildMixedCareerChart()` already covers "mixed" from a different angle; genuinely different test coverage (currently missing) is a real gap, not a bug.
 
 - **Two concrete follow-ups surfaced by the PDF/DOCX library validation (see `DECISIONS.md`, 2026-07-30), neither blocking the Essence-depth v1 but both real before Overview/Full or P8 output goes through this pipeline:**
   - `pdfmake`'s standard-14 fonts (Helvetica etc., used for the English-only validation) support ANSI/English characters only. Once P8's Tamil/Hindi/Telugu output needs to go through PDF export, a real embedded font with the right script coverage (e.g. Noto Sans Devanagari/Tamil/Telugu) will be needed -- not scoped or chosen yet.
@@ -209,10 +237,10 @@ See `README.md` for current status.
 
 - **`renderSouthIndianChartSVG()` only renders D1 (Rasi) -- D9 (Navamsa) and other vargas have no chart-renderable sign-placement data assembled anywhere.** The renderer itself is already decoupled from `ChartData` specifically so it can take D9's sign placements without any renderer changes once they exist -- the missing piece is a function that computes each planet's D9 sign (via the existing `navamsaSign()` in `src/engine/varga.ts`) plus the D9 Lagna sign, and assembles them into the same `SouthIndianChartInput` shape. Small, bounded, not done because D1 was the only scope asked for.
 
-- **Health's and Relationships' own domain-mapping table rows name factors P4's finding-generators never implemented.** Traced while directly answering why Health's P5 finding coverage structurally caps at 3 possible findings (see `DECISIONS.md`, 2026-07-30 "Health domain templated" entry for the cap itself, and 2026-07-30 "scoping" entry below for this gap specifically): the cap is a real, correct consequence of the Lagna-lord/house-lord mechanism, but that mechanism doesn't cover everything interpretation.md's table names.
-  - Health's third named factor, **"planetary body-part associations,"** has zero implementation for any of the nine planets, even though the data already exists: `constants.md`'s karaka table has a body-part column for every graha (Mars: blood, Mercury: nervous system/skin, Jupiter: liver/fat, Venus: kidneys, Saturn: bones/joints/chronic illness, etc.) -- the same table `GRAHA_DOMAINS` already partially draws from for Career/Wealth/Relationships. Unlike the Mars/Mercury-as-Career-karaka question (correctly left untagged per SKILL.md's caution against inventing an unstated mapping), this is the reverse case: the mapping is already written down, just never turned into a Finding.
-  - Health's second named factor, **"afflictions to 6th/8th,"** and Relationships' **"aspects onto the 7th,"** currently only mean "the house lord's own dignity" (`houseLordFindings()`). Neither covers which planets *occupy* or *aspect* those houses -- classically at least as central for dusthana/7th-house assessment specifically. The primitive already exists (`aspectedHouses()`, `src/engine/houses.ts`); house occupancy is trivially derivable from each planet's own `.house` field. Relationships already shipped without this, so it's a pre-existing gap, not something introduced today.
-  - Not implemented now: each would be a new Finding-generator (parallel in scope to `combustionFindings()`), deserving its own deliberate design pass (in the spirit of P7b's design-gate) rather than a mid-domain addition -- and would change finding counts several existing narrative tests assert on exactly, needing a full re-validation pass regardless of which domain is being worked on when it happens.
+- **RESOLVED 2026-08-01 ("Piece A" -- see DECISIONS.md for the full design-gate and build entry). Health's and Relationships' own domain-mapping table rows named factors P4's finding-generators never implemented; both are now built.**
+  - Health's third named factor, **"planetary body-part associations"** -- `bodyPartFindings()` (`src/findings/index.ts`), one finding per graha with both a notable dignity and a body-part entry in `constants.md`'s Karakas table (Rahu/Ketu excluded, no entry exists for them). Verified against the golden chart: Sun, Saturn, Venus, and Mars all now produce real body-part findings quoted in Health's full-depth text.
+  - Health's second named factor, **"afflictions to 6th/8th,"** and Relationships' **"aspects onto the 7th"** -- `houseAfflictionFindings()` (`src/findings/index.ts`), reusing the already-existing `aspectedHouses()` primitive plus each planet's own `.house` field. "Affliction" means occupancy or aspect by a natural malefic (Saturn, Mars, Rahu, Ketu) -- a disclosed implementation choice (Sun/Mercury/Moon excluded, `constants.md`'s new "Natural malefics and benefics" section), not settled classical fact, same disclosure standard as Mangal Dosha's own reference-point choice. The golden chart has no real 6th/8th/7th affliction by this definition (confirmed, not assumed -- a dedicated synthetic-chart test suite proves the mechanism detects correctly when it should).
+  - **Real bug found and fixed while verifying real output, not left to stand**: `bodyPartFindings()`'s new findings shared `dedupeBySharedFact()`'s dignity-evidence collision key with existing dignity/house-lord findings for the same planet, and were being silently dropped by richer siblings (verified: Sun's and Saturn's body-part findings were missing from Health's real rendered text before the fix). Fixed in `render.ts`'s `dignityEvidenceKey()` -- body-part findings are now excluded from that clustering entirely, since they say something genuinely different (which body system) with the same underlying fact, not a restatement of it. Verified by reverting the fix and watching the new regression test fail with exactly the predicted mismatch, then restoring it.
 
 - **Timing's P5 v1 (`src/narrative/timing.ts`) deliberately does not build interpretation.md's full "Timeline" section (§ Full-depth document structure, item 7) -- explicitly scoped down, confirmed with the user before implementing, not silently trimmed.** Two pieces remain open, each real new design surface, not a quick follow-on:
   - **Transit overlay** -- Jupiter/Saturn sign ingresses (`src/engine/transit.ts`, already built and validated for P7b) aren't shown anywhere in Timing's render, and transit data still isn't wired into `computeChart()`'s own output at all (a pre-existing gap, tracked above under P7b's own entry). Needs a decision on how a transit ingress and a dasha transition should be interleaved in one "near-term timeline" narrative, not just two separate lists.
@@ -276,9 +304,10 @@ reconstructing from memory or a secondary source:
 - Shadbala (six-fold planetary strength)
 - Ashtakavarga
 - Divisional charts beyond D1/D9 (D2-D60, remaining shodasavarga)
-- Nabhasa yogas (BPHS Ch. 35)
-- Raja Yoga combinations beyond the current simplified subset (Ch. 39-41)
-- Kala Sarpa, Shakata, Sade Sati doshas
+- **DONE 2026-08-01 (Piece B, DECISIONS.md): Raja Yoga's simplified subset** (`detectRajaYoga()`, Ch. 39) -- Kendra-lord/Trikona-lord conjunction, mutual-Kendra aspect, and the dignified dual Lagna-lord case. The Jaimini/Chara-Karaka method (Ch. 39 vv.3-5's OTHER named method) remains deferred -- Chara Karakas aren't computed anywhere in this project (still listed below).
+- **PARTIALLY DONE 2026-08-01: Nabhasa yogas** (BPHS Ch. 35) -- a deliberate subset implemented (`detectRajjuYoga`/`detectMusalaYoga`/`detectNalaYoga`/`detectGadaYoga`/`detectVihagaYoga`), not exhaustive: Ch. 35 names roughly 32 total. Mala/Bhujanga (Sarpa) Yoga was deliberately excluded -- the fetched primary-source verse left genuine ambiguity about whether every occupant of the 3 Kendras must be benefic/malefic or merely one present, confirmed by asking the source directly and getting "does not explicitly state" back; yogas.md's own Musala caution ("when in doubt, do not report") applied. The remaining ~26 unnamed Nabhasa yogas are still fully deferred, not started.
+- **Kala Sarpa, Sade Sati doshas -- held, not queued as automatically next.** Explicitly held out of the 2026-08-01 Piece B pass per direct instruction; both confirmed ABSENT from BPHS entirely (checked directly, both volumes) and need their own separate design gate before any work starts, same category as Personality's own Phaladeepika detour -- real primary-source research, not a quick lookup. **2026-08-02: the specific question that had been motivating continued fact-base-widening work (does more findings coverage close the Full Blueprint page-count gap) is now definitively answered -- no** (re-measured after Piece A+B: page count unchanged at 4 despite ~32% real content growth; see the page-count entry above and `DECISIONS.md`). Decided to regroup on priority before spending Kala Sarpa/Sade Sati's research effort, rather than treating them as automatically next just because they were named alongside Nabhasa/Raja Yoga in the original Piece B scope.
+- Shakata Yoga (Moon 6th/8th/12th from Jupiter, correctly re-sourced to Phaladeepika Ch. 6 v.14, not BPHS -- see "Known gaps" below) -- reference material is fixed, but `detectShakataYoga()` itself still doesn't exist as code; not implemented in the 2026-08-01 pass, since only the pre-existing citation error was in scope to fix, not new detection logic. BPHS's own unrelated "Sakata" Nabhasa yoga (all seven grahas in Lagna+7th) remains separately unimplemented too.
 - Karakas / Atmakaraka (Jaimini-style, Ch. 32-33)
 - Dasha systems other than Vimshottari (Ashtottari, Kalachakra, etc.)
 - House systems other than Whole Sign; chart formats other than South Indian
@@ -291,7 +320,7 @@ reconstructing from memory or a secondary source:
 
 ## Not started
 
-- P6 document assembly: Full Blueprint's own document/pagination pipeline, free-tools cluster, Remedies section -- SVG chart (D1+D9), PDF/DOCX export at Essence/Overview depth, and Full Blueprint's Natal-chart-decoded/Personality section *content* are all done (see "Next up" above); assembling that content into an actual 40-60 page Full Blueprint PDF/DOCX, the free-tools cluster, and Remedies remain not yet begun
+- P6 document assembly: free-tools cluster, Remedies section not yet begun -- SVG chart (D1+D9), PDF/DOCX export at Essence/Overview depth, and Full Blueprint's own document/pagination pipeline (sections 1-7, section 8 marked not-yet-available) are all built (see "Next up" above); the real measured page count (4, not 40-60, re-confirmed unchanged after Piece A+B widened the finding base) is a closed *diagnosis* (architectural, not a findings-coverage gap) but an open *decision* -- whether to pursue paid/BYOK LLM elaboration to actually close it is its own future design conversation, not started
 - P7b Jupiter/Saturn transit ingress detection: search primitive and `.ics` export both done and validated (`src/engine/transit.ts`, `src/export/transitCalendar.ts` -- see "Next up" above); not yet wired into `computeChart()`'s output or merged with the dasha `.ics` into a single file
 - P7's versioned-regeneration-with-diffs requirement -- not yet scoped into either P7a or P7b
 - Timing's deferred "Timeline" scope (transit overlay, ranked/reasoned turning points) -- see "Known gaps" above

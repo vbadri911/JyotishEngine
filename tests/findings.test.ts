@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { dignityFindings, houseLordFindings, combustionFindings, currentDashaFinding, aggregateFindings } from "../src/findings/index.js";
+import { dignityFindings, houseLordFindings, combustionFindings, bodyPartFindings, houseAfflictionFindings, currentDashaFinding, aggregateFindings } from "../src/findings/index.js";
 import { computeMahadashaSequence } from "../src/engine/dasha.js";
 import { computeChart } from "../src/index.js";
 import { DEFAULT_ENGINE_SETTINGS } from "../src/types.js";
@@ -268,5 +268,139 @@ describe("computeChart() surfaces the currently-active dasha period and full fin
     for (const f of findings) {
       expect(f.statement, f.statement).not.toMatch(/\b[123]th\b/);
     }
+  });
+});
+
+/**
+ * Piece A (BACKLOG.md "Health's and Relationships' own domain-mapping table
+ * rows name factors P4's finding-generators never implemented"), built
+ * 2026-08-01 per the design gate in DECISIONS.md. Both against the
+ * hand-built mock chart, mirroring dignityFindings()/houseLordFindings()'s
+ * own test structure above.
+ */
+describe("bodyPartFindings", () => {
+  const chart = buildReferenceChart();
+  const findings = bodyPartFindings(chart);
+
+  it("produces a finding for every planet with BOTH a notable dignity AND a body-part entry", () => {
+    // Sun (exalted), Mars (own), Venus (own), Saturn (exalted) all qualify.
+    // Moon/Mercury are notable-dignity-excluded (neutral); Rahu/Ketu have no
+    // body-part entry in constants.md's Karakas table at all.
+    const grahas = findings.map((f) => f.statement.split(" ")[0]).sort();
+    expect(grahas).toEqual(["Mars", "Saturn", "Sun", "Venus"]);
+  });
+
+  it("all tagged health only, all challenging strength/polarity matching the dignity table", () => {
+    for (const f of findings) {
+      expect(f.domain).toEqual(["health"]);
+    }
+    const sun = findings.find((f) => f.statement.startsWith("Sun"))!;
+    expect(sun.statement).toBe("Sun is classically associated with bones and eyes. Sun is exalted in Aries, suggesting general resilience in this area.");
+    expect(sun.polarity).toBe("supportive");
+    const saturn = findings.find((f) => f.statement.startsWith("Saturn"))!;
+    expect(saturn.statement).toBe("Saturn is classically associated with bones, joints, and chronic conditions. Saturn is exalted in Libra, suggesting general resilience in this area.");
+  });
+
+  it("the body-part association and the dignity are stated as two independent sentences, not fused, so dignity doesn't read as the REASON for the association -- real fluency issue, fixed 2026-08-01", () => {
+    const sun = findings.find((f) => f.statement.startsWith("Sun"))!;
+    const sentences = sun.statement.split(". ");
+    expect(sentences).toHaveLength(2);
+    expect(sentences[0]).toBe("Sun is classically associated with bones and eyes");
+    expect(sentences[1]).toContain("exalted");
+    expect(sentences[1]).toContain("resilience");
+  });
+
+  it("a debilitated (challenging) planet gets 'worth general attention' framing, not 'resilience' -- tendency differs by dignity, the association itself does not", () => {
+    const challenging = bodyPartFindings({
+      ...chart,
+      planets: { ...chart.planets, Saturn: planet({ graha: "Saturn", sign: "Cancer", house: 3, dignity: "debilitated" }) },
+    });
+    const saturn = challenging.find((f) => f.statement.startsWith("Saturn"))!;
+    expect(saturn.statement).toBe("Saturn is classically associated with bones, joints, and chronic conditions. Saturn is debilitated in Cancer, suggesting this may be an area worth general attention.");
+    expect(saturn.polarity).toBe("challenging");
+  });
+
+  it("does not fire for a planet with a body-part entry but no notable dignity (Mercury: neutral)", () => {
+    expect(findings.some((f) => f.statement.startsWith("Mercury"))).toBe(false);
+  });
+
+  it("does not fire for Rahu/Ketu even with a notable dignity (no body-part entry exists for either)", () => {
+    const chartWithNotableNodes: ChartData = {
+      ...chart,
+      planets: {
+        ...chart.planets,
+        Rahu: planet({ graha: "Rahu", sign: "Gemini", house: 11, dignity: "exalted" }),
+        Ketu: planet({ graha: "Ketu", sign: "Sagittarius", house: 5, dignity: "debilitated" }),
+      },
+    };
+    const withNodes = bodyPartFindings(chartWithNotableNodes);
+    expect(withNodes.some((f) => f.statement.startsWith("Rahu") || f.statement.startsWith("Ketu"))).toBe(false);
+  });
+});
+
+describe("houseAfflictionFindings", () => {
+  it("is silent for all three target houses when no natural malefic occupies or aspects them (golden-mock chart)", () => {
+    const chart = buildReferenceChart();
+    // Saturn=house3, Mars=house9, Rahu=house11, Ketu=house5 -- confirmed
+    // (via aspects.json's real offsets) none occupy or aspect houses 6/7/8
+    // for this chart. Real absence, not an untested assumption.
+    expect(houseAfflictionFindings(chart)).toEqual([]);
+  });
+
+  it("detects 6th-house occupancy by a natural malefic (Health)", () => {
+    const chart = buildReferenceChart();
+    const afflicted: ChartData = { ...chart, planets: { ...chart.planets, Saturn: planet({ graha: "Saturn", sign: "Virgo", house: 6, dignity: "exalted" }) } };
+    const findings = houseAfflictionFindings(afflicted);
+    const sixth = findings.find((f) => f.statement.startsWith("The 6th house"));
+    expect(sixth).toBeDefined();
+    expect(sixth!.domain).toEqual(["health"]);
+    expect(sixth!.statement).toContain("Saturn occupies it");
+  });
+
+  it("detects 8th-house aspect (not occupancy) by a natural malefic via Mars's special 4th-house aspect offset (Health)", () => {
+    const chart = buildReferenceChart();
+    // Mars in house 5: special offset 4 -> wrap(5+4-1)=8 (aspects.json).
+    const afflicted: ChartData = { ...chart, planets: { ...chart.planets, Mars: planet({ graha: "Mars", sign: "Leo", house: 5, dignity: "friend" }) } };
+    const findings = houseAfflictionFindings(afflicted);
+    const eighth = findings.find((f) => f.statement.startsWith("The 8th house"));
+    expect(eighth).toBeDefined();
+    expect(eighth!.domain).toEqual(["health"]);
+    expect(eighth!.statement).toContain("Mars aspects it from the 5th house");
+  });
+
+  it("detects 7th-house aspect by a natural malefic via Rahu's universal 7th-house aspect (Relationships)", () => {
+    const chart = buildReferenceChart();
+    // Rahu in house 1: universal offset 7 -> wrap(1+7-1)=7 (aspects.json).
+    const afflicted: ChartData = { ...chart, planets: { ...chart.planets, Rahu: planet({ graha: "Rahu", sign: "Leo", house: 1 }) } };
+    const findings = houseAfflictionFindings(afflicted);
+    const seventh = findings.find((f) => f.statement.startsWith("The 7th house"));
+    expect(seventh).toBeDefined();
+    expect(seventh!.domain).toEqual(["relationships"]);
+    expect(seventh!.statement).toContain("Rahu aspects it from the 1st house");
+  });
+
+  it("combines multiple afflicting malefics for the same house into one finding, not one per malefic", () => {
+    const chart = buildReferenceChart();
+    const afflicted: ChartData = {
+      ...chart,
+      planets: {
+        ...chart.planets,
+        Saturn: planet({ graha: "Saturn", sign: "Virgo", house: 6, dignity: "exalted" }),
+        Mars: planet({ graha: "Mars", sign: "Virgo", house: 6, dignity: "friend" }),
+      },
+    };
+    const findings = houseAfflictionFindings(afflicted);
+    const sixthHouseFindings = findings.filter((f) => f.statement.startsWith("The 6th house"));
+    expect(sixthHouseFindings).toHaveLength(1);
+    expect(sixthHouseFindings[0]!.statement).toContain("Saturn occupies it");
+    expect(sixthHouseFindings[0]!.statement).toContain("Mars occupies it");
+  });
+
+  it("never uses Sun/Mercury/Moon as an afflicting malefic (disclosed exclusion, constants.md)", () => {
+    const chart = buildReferenceChart();
+    // Sun in house 6 (occupies) -- should NOT produce a 6th-house affliction finding.
+    const notAfflicted: ChartData = { ...chart, planets: { ...chart.planets, Sun: planet({ graha: "Sun", sign: "Virgo", house: 6, dignity: "exalted" }) } };
+    const findings = houseAfflictionFindings(notAfflicted);
+    expect(findings.some((f) => f.statement.startsWith("The 6th house"))).toBe(false);
   });
 });
