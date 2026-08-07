@@ -22,6 +22,7 @@ import type { ChartData, Domain, Finding, Graha, Polarity } from "../types.js";
 import type { DashaComputationResult } from "../engine/dasha.js";
 import { findActivePeriod } from "../engine/dasha.js";
 import { aspectedHouses } from "../engine/houses.js";
+import { detectDashaRemedy } from "../rules/dashaRemedies.js";
 import { ordinal } from "../util/ordinal.js";
 import { dignityPredicate } from "../util/dignityPredicate.js";
 import { formatUtcDate } from "../util/formatUtcDate.js";
@@ -316,5 +317,6 @@ export function aggregateFindings(
     ...bodyPartFindings(chart),
     ...houseAfflictionFindings(chart),
     ...(current ? [current] : []),
+    ...detectDashaRemedy(chart, dasha, asOfISO),
   ];
 }

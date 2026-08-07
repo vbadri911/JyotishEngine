@@ -3,7 +3,7 @@ import { dignityFindings, houseLordFindings, combustionFindings, bodyPartFinding
 import { computeMahadashaSequence } from "../src/engine/dasha.js";
 import { computeChart } from "../src/index.js";
 import { DEFAULT_ENGINE_SETTINGS } from "../src/types.js";
-import type { ChartData, PlanetPosition, Graha } from "../src/types.js";
+import type { ChartData, PlanetPosition, Graha, Domain } from "../src/types.js";
 
 function planet(overrides: Partial<PlanetPosition> & { graha: Graha }): PlanetPosition {
   return {
@@ -185,7 +185,7 @@ describe("aggregateFindings", () => {
     const chart = buildReferenceChart();
     const dasha = computeMahadashaSequence("1983-04-23T10:00:00.000Z", 139.267);
     const fakeYogaFindings = [
-      { id: "yoga-fake", domain: ["purpose"] as const, statement: "fake yoga", evidence: [], strength: 1, polarity: "neutral" as const },
+      { id: "yoga-fake", domain: ["purpose"] as Domain[], statement: "fake yoga", evidence: [], strength: 1, polarity: "neutral" as const },
     ];
     const all = aggregateFindings(chart, dasha, fakeYogaFindings, "2020-01-01T00:00:00.000Z");
 

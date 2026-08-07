@@ -36,6 +36,7 @@
  *     scratch, so it structurally cannot repeat what overview already said.
  */
 import type { Domain, Finding, NarrativeSection, OutputDepth } from "../types.js";
+import { findingCategoryRank } from "../util/findingCategory.js";
 
 export type DomainTier = "strong" | "mixed" | "challenging" | "thin";
 
@@ -147,12 +148,14 @@ function dignityEvidenceKey(finding: Finding): string | null {
  *      a bare dignity restatement.
  *   3. Anything else (plain dignity, combustion, ...).
  * Ties broken by strength, then by original position, for determinism.
+ *
+ * The category ordering itself lives in `util/findingCategory.ts`, shared
+ * with `export/remediesSection.ts`'s Executive Summary ranking (2026-08-04)
+ * -- this function's own behavior here is unchanged, a pure delegation, not
+ * a rewrite (verified against every existing dedup collision test).
  */
 function richnessRank(f: Finding): number {
-  if (f.classification !== undefined) return 0;
-  if (f.statement.includes("Lagna lord")) return 1;
-  if (f.id.startsWith("house-lord-")) return 2;
-  return 3;
+  return findingCategoryRank(f);
 }
 
 /** Extracts the governed house number from a house-lord finding's own

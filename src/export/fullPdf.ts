@@ -8,14 +8,16 @@
  * validated against real content (Overview's own spec estimate, "~10 pages,"
  * turned out to be a 2-page real document once built -- DECISIONS.md,
  * 2026-07-30). This module does not target a page count; it renders the
- * real content sections 1-7 assemble, plus section 8's explicit
- * not-yet-available notice, and the real page count is measured afterward
- * from the actual generated PDF (see tests/export/fullDocument.test.ts and
- * DECISIONS.md for the measured result).
+ * real content all 8 sections assemble (section 8, Remedies & Executive
+ * Summary, built and wired in as of 2026-08-03 -- see remediesSection.ts),
+ * and the real page count is measured afterward from the actual generated
+ * PDF (see tests/export/fullDocument.test.ts and DECISIONS.md for the
+ * measured result).
  */
 import pdfmake from "pdfmake";
 import type { Content, ContentTable } from "pdfmake/interfaces.js";
 import type { FullDocumentContent, FullBlueprintSection } from "./fullDocument.js";
+import type { RemediesSectionContent } from "./remediesSection.js";
 import type { PlanetRow } from "./chartTables.js";
 import type { PlanetNote, HouseNote } from "../narrative/natal.js";
 
@@ -74,6 +76,26 @@ function blueprintSection(section: FullBlueprintSection): Content[] {
   ];
 }
 
+function remediesSection(r: RemediesSectionContent): Content[] {
+  const margin10: [number, number, number, number] = [0, 0, 0, 10];
+  return [
+    { text: r.title, style: "sectionHeading" },
+
+    { text: r.executiveSummaryHeading, style: "domainLabel" },
+    { text: r.summaryIntroText, margin: [0, 0, 0, 6] as [number, number, number, number] },
+    ...(r.topFindings.length > 0 ? [{ ul: r.topFindings, margin: [0, 0, 0, 8] as [number, number, number, number] }] : []),
+    ...(r.currentDashaSentence ? [{ text: r.currentDashaSentence, margin: margin10 }] : []),
+
+    { text: r.remedyHeading, style: "domainLabel" },
+    { text: r.remedyIntroText, margin: [0, 0, 0, 6] as [number, number, number, number] },
+    r.remedyText
+      ? { text: [r.remedyText, r.remedyCitation ? ` (${r.remedyCitation})` : ""].join(""), margin: margin10 }
+      : { text: r.noRemedyText, margin: margin10 },
+
+    { text: r.closingText, italics: true, margin: margin10 },
+  ];
+}
+
 export async function exportFullPdf(content: FullDocumentContent): Promise<Buffer> {
   lockAccessPoliciesOnce();
   pdfmake.addFonts(HELVETICA_FONT_FAMILY);
@@ -114,8 +136,7 @@ export async function exportFullPdf(content: FullDocumentContent): Promise<Buffe
     ...blueprintSection(content.health),
     ...blueprintSection(content.timeline),
 
-    { text: content.remedies.heading, style: "sectionHeading" },
-    { text: content.remedies.notice, italics: true, color: "#666666", margin: [0, 0, 0, 12] as [number, number, number, number] },
+    ...remediesSection(content.remedies),
 
     { text: content.settingsDisclosure, style: "disclosure" },
   ];

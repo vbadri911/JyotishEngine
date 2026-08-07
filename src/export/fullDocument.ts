@@ -1,20 +1,22 @@
 /**
  * Full Blueprint content assembly (P6) -- pulls together interpretation.md's
- * "Full-depth document structure" sections 1-7 (Natal chart decoded,
+ * full "Full-depth document structure", all 8 sections (Natal chart decoded,
  * Personality, Purpose, Career & Wealth, Relationships & Family, Health,
- * Timeline), the same format-agnostic-content-then-format-specific-render
- * split as `essenceDocument.ts`/`overviewDocument.ts`. Section 8 (Remedies &
- * Executive Summary) has zero content anywhere in this codebase -- per
- * explicit instruction, this module marks it clearly as not yet available
- * rather than omitting it silently or inventing placeholder content.
+ * Timeline, Remedies & Executive Summary), the same
+ * format-agnostic-content-then-format-specific-render split as
+ * `essenceDocument.ts`/`overviewDocument.ts`.
  *
  * Sections 1-2 (`buildNatalChartSectionContent()`, `buildPersonalitySectionContent()`)
- * already have their own dedicated content assemblers, built in the previous
+ * already have their own dedicated content assemblers, built in an earlier
  * session -- reused here unchanged. Sections 3-7 previously had no assembler
  * at all: `renderDomainSection()`/`renderTimingSection()` at `full` depth
  * existed and were tested, but nothing pulled them into one Full Blueprint
- * object (BACKLOG.md's "sections 3-7 assembly gap"). This module is that
- * assembler.
+ * object (BACKLOG.md's "sections 3-7 assembly gap"). Section 8
+ * (`buildRemediesSectionContent()`, remediesSection.ts) was the last
+ * previously-unbuilt section -- see that module's own doc for the Executive
+ * Summary selection logic and the Tier 1 Remedies wiring (`asOfISO`-
+ * conditional, computed fresh here, not read from the aggregated `findings`
+ * array baked in at `computeChart()`'s own internal "now").
  *
  * interpretation.md's own section structure groups two of the six existing
  * domains under one heading each ("Career & Wealth", "Relationships &
@@ -33,6 +35,7 @@ import { renderDomainSection } from "../narrative/render.js";
 import { renderTimingSection } from "../narrative/timing.js";
 import { buildNatalChartSectionContent, type NatalChartTemplate, type NatalChartSectionContent } from "./natalChartSection.js";
 import { buildPersonalitySectionContent, type PersonalityTemplate, type PersonalitySectionContent } from "./personalitySection.js";
+import { buildRemediesSectionContent, type RemediesTemplate, type RemediesSectionContent } from "./remediesSection.js";
 import { formatSettingsDisclosure } from "./settingsDisclosure.js";
 import { type SixDomainTemplates } from "./templates.js";
 
@@ -55,9 +58,8 @@ export interface FullDocumentContent {
   relationshipsAndFamily: FullBlueprintSection;
   health: FullBlueprintSection;
   timeline: FullBlueprintSection;
-  /** Section 8 (Remedies & Executive Summary) -- zero content anywhere in
-   *  this codebase as of this build. Marked explicitly, not omitted. */
-  remedies: { heading: string; notice: string };
+  /** Section 8 (Remedies & Executive Summary) -- real content, not a placeholder. */
+  remedies: RemediesSectionContent;
   settingsDisclosure: string;
 }
 
@@ -68,10 +70,12 @@ export function buildFullDocumentContent(
   templates: SixDomainTemplates,
   natalTemplate: NatalChartTemplate,
   personalityTemplate: PersonalityTemplate,
+  remediesTemplate: RemediesTemplate,
   asOfISO?: string
 ): FullDocumentContent {
   const natal = buildNatalChartSectionContent(chart, findings, natalTemplate);
   const personality = buildPersonalitySectionContent(chart, personalityTemplate);
+  const remedies = buildRemediesSectionContent(chart, findings, dasha, remediesTemplate, asOfISO);
 
   const purpose: FullBlueprintSection = {
     heading: "Purpose",
@@ -114,11 +118,7 @@ export function buildFullDocumentContent(
     relationshipsAndFamily,
     health,
     timeline,
-    remedies: {
-      heading: "Remedies & Executive Summary",
-      notice:
-        "This section is not yet available in this build. Remedies requires its own primary-source-verified reference material (none exists yet in this project -- see BACKLOG.md), and interpretation.md does not further describe what an Executive Summary should contain beyond naming it. Both remain open scoping work, not an oversight.",
-    },
+    remedies,
     settingsDisclosure: formatSettingsDisclosure(chart.settings),
   };
 }
