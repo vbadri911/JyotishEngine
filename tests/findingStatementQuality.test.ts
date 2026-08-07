@@ -208,7 +208,7 @@ function chartWithLagna(sign: SignName, lagnaLord: Graha, lagnaLordDignity: Plan
     ...chart,
     ascendant: { ...chart.ascendant, sign },
     houseLords: { ...chart.houseLords, 1: { lord: lagnaLord, placedInHouse: chart.planets[lagnaLord]!.house } },
-    planets: { ...chart.planets, [lagnaLord]: planet({ graha: lagnaLord, ...chart.planets[lagnaLord]!, dignity: lagnaLordDignity }) },
+    planets: { ...chart.planets, [lagnaLord]: planet({ ...chart.planets[lagnaLord]!, dignity: lagnaLordDignity }) },
   };
 }
 

@@ -208,13 +208,161 @@ See `README.md` for current status.
    first-ever UI-framework decision, AND separately, real Panchang
    computation -- zero tithi/vara/karana logic exists anywhere in this
    codebase or its reference material, a new Jyotish-domain feature
-   independent of the framework choice); and the Remedies section (currently
-   zero code -- even a v1 disclosure-only version, given interpretation.md's
-   remedy guardrails route most real recommendations to "consult a
-   practitioner" anyway, would be a defensible, much smaller starting scope
-   than a full remedy-generation engine; watch for Lal Kitab vs. mainstream
-   Jyotish tradition-conflation when sourcing, the same class of risk as any
-   other school-mismatch this project already guards against).
+   independent of the framework choice).
+   **Section 8 (Remedies & Executive Summary): BUILT AND WIRED IN --
+   Full Blueprint is now a genuine 8/8-section document, real page count
+   re-measured at 4 (via 5, briefly, before a real Executive Summary
+   ranking bug was found and fixed -- see below) (`DECISIONS.md`,
+   2026-08-03/04):**
+   - **Executive Summary** (`src/export/remediesSection.ts`): built --
+     reuses interpretation.md's own literal
+     Essence description (top 2-3 findings by strength across the WHOLE
+     chart + current dasha in one sentence), the exact thing P5 deliberately
+     did NOT build when it chose "one sentence per domain" instead
+     (`essenceDocument.ts`'s own module doc). Zero new content, zero new
+     sourcing -- a selection over already-computed `Finding.strength` values.
+   - **Remedies, Tier 1 (dasha-period remedy) -- both blocking conditions
+     resolved, engine built and tested for all 9 Mahadashas:**
+     1. **RESOLVED**: the real BPHS chapters are Ch. 52-60 (R. Santhanam
+        translation, Vol. 2), NOT the originally guessed Ch. 46-53 (which is
+        dasha mechanics/predictive results, not remedies) -- a real,
+        logged correction (`DECISIONS.md`), same discipline as the Shakata
+        Yoga citation fix. One chapter per Mahadasha lord, each walking all
+        9 Antardashas; the real structure is a genuine 9x9=81-cell table,
+        matching the secondary compilation's own shape. Built in two passes:
+        Sun/Moon/Rahu/Saturn first (a benefic luminary, a shadow planet, a
+        naturally malefic planet), then Jupiter -- the one classical
+        benefic none of the first four were -- read and checked in
+        isolation BEFORE the remaining four (Mars/Mercury/Ketu/Venus),
+        specifically to confirm the trigger vocabulary generalizes rather
+        than assuming it from malefic/luminary chapters alone. It did: no
+        new condition type, no fewer evil-effects clauses just for being a
+        benefic's chapter. **Real research finding that reshaped the
+        design**: every row's remedy is conditional on the Antardasha lord
+        being AFFLICTED in that specific chart (debilitated, in
+        6th/8th/12th from Ascendant or from the Mahadasha lord's own sign, a
+        maraka-house lord, aspected by a malefic) -- not a flat "this period
+        is running" trigger. A naive MD x AD lookup would show a remedy even
+        to a reader whose Antardasha lord is genuinely well-placed,
+        manufacturing an affliction BPHS's own text doesn't describe for
+        that placement. `src/rules/dashaRemedies.ts` implements this as a
+        generic, chart-conditional engine (5 atomic condition types --
+        dignity, house-from-Ascendant, house-from-Mahadasha-lord's-sign,
+        maraka-lordship, aspect/conjunction-with-malefics -- verified
+        uniform across 5 stress-test chapters before generalizing to all 9);
+        `src/rules/dashaRemedyData.ts` holds the verse-verified row data,
+        checked chapter-by-chapter for the same OCR page-order scrambling
+        that hit Ch. 52 originally (confirmed: none of the other 7 chapters
+        were actually scrambled, checked rather than assumed clean). **Four
+        real, deliberate omissions, not gaps -- two different kinds**:
+        Mars-in-Moon and Moon-in-Venus genuinely have no remedy verse at
+        all; Ketu-in-Mars and Mars-in-Venus have ONLY R. Santhanam's own
+        explicitly-flagged translator speculation ("Perhaps..."/"we
+        believe...") standing in for a missing verse -- correctly excluded
+        as translator commentary, not Parashara's text, the same standard
+        the original Ch. 57 note-contamination check established. Table
+        holds 77 of 81 rows. Real-tested against the golden chart
+        (`tests/dashaRemedies.test.ts`, 29 tests): today's real running
+        Antardasha (Mercury in Rahu Mahadasha) genuinely surfaces a remedy
+        (Mercury is this chart's real 2nd-house/maraka lord AND sits in
+        Saturn's 7th-house aspect); Mars surfaces in its own Mahadasha via a
+        different real mechanism (Saturn's aspect alone, non-maraka,
+        own-sign); Saturn surfaces in Ketu Mahadasha for two independent
+        real causes at once (its own maraka lordship AND Mars's aspect) --
+        caught one incomplete hand-verification along the way when the
+        second cause was found only after actually checking rather than
+        assuming a single cause. Jupiter, Ketu, and Venus all correctly stay
+        silent in their own Mahadashas, and Venus-in-Mercury separately
+        stays silent too -- every outcome confirmed against real computed
+        chart facts, not asserted either way.
+     2. **RESOLVED in the engine's own design**: the Finding's reader-facing
+        `statement` is framed as "a traditional supportive practice
+        associated with the current Antardasha," and never states the
+        underlying affliction reasoning (maraka lordship, malefic aspect,
+        etc.) in that text -- Mahamrityunjaya Japa's literal name and any
+        other remedy text never appears paired with words like "evil
+        effects" or "danger." The actual chart-fact reasoning is preserved
+        in `Finding.evidence` for provenance/audit, not in reader-facing
+        prose -- the same disclosed-choice-out-of-statement-text pattern
+        `bodyPartFindings()`/`houseAfflictionFindings()` already use.
+     - **Real research correction also logged**: Mahamrityunjaya Japa's
+       prevalence across sampled rows (3 of 18 in the first two chapters
+       read) is lower than "most of the 81 rows" as originally
+       characterized -- the framing requirement still stands wherever it
+       does appear, just less pervasive than assumed.
+   - **On record, not a bug to reconcile later**: Tier 1's real content
+     (mantra/charity/ritual) differs substantively from the gemstone-centric
+     remedies `interpretation.md`'s own guardrails section was written
+     assuming (a reasonable assumption at spec-writing time, following
+     common convention -- just not what this project's actual primary
+     source teaches). The guardrails' safety intent (don't over-strengthen;
+     route high-impact remedies to a practitioner; distinguish
+     chart-mandated from general-optional) stays fully valid and now
+     literally governs Tier 1's real engine (a remedy only surfaces when the
+     chart itself mandates it); only the assumed remedy modality changes.
+   - Tier 2 (dignity/affliction-targeted remedy, independent of dasha period
+     -- what the existing guardrails were actually written for) is explicitly
+     NOT in this v1: nothing found so far confirms BPHS teaches a distinct
+     per-planet-dignity remedy framework separate from the dasha table. A
+     real, separate, unconfirmed research question for later, not bundled in.
+   - **DONE**: Executive Summary built (`src/export/remediesSection.ts`,
+     `selectTopFindings()`); wired into `buildFullDocumentContent()`'s real
+     Section 8 (`fullDocument.ts`/`fullPdf.ts`/`fullDocx.ts`), replacing the
+     old "not yet available" notice. `detectDashaRemedy()` is called fresh
+     from the section's own `asOfISO`, not read off the pre-aggregated
+     `findings` array (which is baked in at `computeChart()`'s own internal
+     "now") -- the same fix already needed once for `renderTimingSection()`,
+     applied proactively this time instead of being rediscovered as a bug.
+     Real output visually confirmed (generated DOCX unzipped and read
+     directly) and tested (`tests/export/remediesSection.test.ts`;
+     `tests/export/fullDocument.test.ts` updated for real section-8
+     assertions in place of the old placeholder check).
+   - **DONE, real bug found and fixed post-build, not left unremarked**: the
+     Executive Summary's original strength-only top-3 ranking was a genuine
+     tuning gap, not a legitimate ranking, once real golden-chart output was
+     inspected -- body-part findings (strength copied wholesale from
+     `DIGNITY_STRENGTH`, calibrated in Piece A purely for Health's own
+     single-domain tier classification, never for competing against yoga
+     classifications across domains) crowded this chart's actual standout
+     facts (5 Raja Yoga EXACT combinations, Gajakesari EXACT) entirely out
+     of the top-3. Fixed via a shared `findingCategoryRank()`
+     (`src/util/findingCategory.ts`, extracted from `render.ts`'s
+     `richnessRank()` as a pure, byte-identical delegation, not a rewrite --
+     verified unchanged against all 7 of `render.test.ts`'s explicit
+     collision cases by direct inspection, not just passing tests) --
+     Executive Summary now ranks category-first, `Finding.strength` only as
+     the tiebreak within a category, the same judgment call
+     `dedupeBySharedFact()` already made for within-cluster ties, now
+     generalized to the whole candidate pool. Real, re-verified result: top-3
+     is now Malavya Yoga, Gajakesari Yoga, and the Lagna-lord Raja Yoga --
+     this chart's genuine standouts. A regression-guard test asserts
+     body-part findings never win a slot again despite an equal-or-higher
+     raw strength number.
+   - **Real, measured page count: 4** -- briefly 5 immediately after Section 8
+     was first wired in (before the ranking bug above was caught and fixed);
+     the 3 shorter yoga statements that now win vs. the 3 longer two-sentence
+     body-part statements they replaced was enough of a real content-length
+     difference to land back under a page boundary. Confirmed by regenerating
+     and re-measuring, not assumed. Still nowhere near the spec's 40-60
+     estimate, exactly as the already-complete architectural diagnosis
+     predicted -- this re-measurement (twice) was taken to have the honest
+     current number on record, not because the diagnosis was expected to
+     change, and it didn't.
+     The 4 deliberately-omitted remedy rows' own alternate handling, if any
+     is ever wanted, remains not planned -- see above for why each was
+     excluded.
+   - **Separately found and fixed while investigating the ranking bug**:
+     `tsconfig.json` excluded `tests/` from `npm run typecheck` for this
+     project's entire history -- real infrastructure debt, not introduced
+     this session, just found this session. New `tsconfig.typecheck.json`
+     (kept separate from the build-facing `tsconfig.json` so `dist/` never
+     picks up compiled test files) now covers both; `package.json`'s
+     `typecheck` script updated. Immediately surfaced two real, latent,
+     pre-existing type errors in test files (a `readonly` tuple mismatch, a
+     duplicate object-literal key silently overwriting itself) -- both fixed,
+     both confirmed type-only (no runtime behavior change, affected tests
+     rerun and still passing). Proved the new config actually catches
+     regressions by injecting and reverting a deliberate type error.
 
 ## Known gaps
 
@@ -320,7 +468,7 @@ reconstructing from memory or a secondary source:
 
 ## Not started
 
-- P6 document assembly: free-tools cluster, Remedies section not yet begun -- SVG chart (D1+D9), PDF/DOCX export at Essence/Overview depth, and Full Blueprint's own document/pagination pipeline (sections 1-7, section 8 marked not-yet-available) are all built (see "Next up" above); the real measured page count (4, not 40-60, re-confirmed unchanged after Piece A+B widened the finding base) is a closed *diagnosis* (architectural, not a findings-coverage gap) but an open *decision* -- whether to pursue paid/BYOK LLM elaboration to actually close it is its own future design conversation, not started
+- P6 document assembly: the free-tools cluster remains the only unbuilt piece -- SVG chart (D1+D9), PDF/DOCX export at Essence/Overview depth, and Full Blueprint's own document/pagination pipeline are all built, and as of 2026-08-03/04 Full Blueprint is a genuine 8/8-section document (section 8, Remedies & Executive Summary, built and wired in -- see "Next up" above). Real, measured page count: 5 (not 4, not 40-60) -- re-measured specifically because every section now has genuine content, not because the count was expected to move; the architectural diagnosis (`render.ts` only ever quotes `Finding.statement` verbatim, never generates elaborated prose) is unchanged and still the reason the 40-60 estimate isn't close. Whether to pursue paid/BYOK LLM elaboration to actually close that gap is its own future design conversation, not started.
 - P7b Jupiter/Saturn transit ingress detection: search primitive and `.ics` export both done and validated (`src/engine/transit.ts`, `src/export/transitCalendar.ts` -- see "Next up" above); not yet wired into `computeChart()`'s output or merged with the dasha `.ics` into a single file
 - P7's versioned-regeneration-with-diffs requirement -- not yet scoped into either P7a or P7b
 - Timing's deferred "Timeline" scope (transit overlay, ranked/reasoned turning points) -- see "Known gaps" above

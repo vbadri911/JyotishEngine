@@ -7,6 +7,7 @@
  */
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun, Table, TableRow, TableCell, WidthType } from "docx";
 import type { FullDocumentContent, FullBlueprintSection } from "./fullDocument.js";
+import type { RemediesSectionContent } from "./remediesSection.js";
 import type { PlanetRow } from "./chartTables.js";
 import type { PlanetNote, HouseNote } from "../narrative/natal.js";
 
@@ -57,6 +58,25 @@ function blueprintSectionParagraphs(section: FullBlueprintSection): Paragraph[] 
   ];
 }
 
+function remediesSectionParagraphs(r: RemediesSectionContent): Paragraph[] {
+  return [
+    new Paragraph({ text: r.title, heading: HeadingLevel.HEADING_1 }),
+
+    new Paragraph({ text: r.executiveSummaryHeading, heading: HeadingLevel.HEADING_2 }),
+    new Paragraph({ children: [new TextRun(r.summaryIntroText)] }),
+    ...r.topFindings.map((f) => new Paragraph({ text: f, bullet: { level: 0 } })),
+    ...(r.currentDashaSentence ? [new Paragraph({ children: [new TextRun(r.currentDashaSentence)] })] : []),
+
+    new Paragraph({ text: r.remedyHeading, heading: HeadingLevel.HEADING_2 }),
+    new Paragraph({ children: [new TextRun(r.remedyIntroText)] }),
+    r.remedyText
+      ? new Paragraph({ children: [new TextRun([r.remedyText, r.remedyCitation ? ` (${r.remedyCitation})` : ""].join(""))] })
+      : new Paragraph({ children: [new TextRun(r.noRemedyText)] }),
+
+    new Paragraph({ children: [new TextRun({ text: r.closingText, italics: true })] }),
+  ];
+}
+
 export async function exportFullDocx(content: FullDocumentContent, d1FallbackPng: Buffer, d9FallbackPng: Buffer): Promise<Buffer> {
   const { natal, personality } = content;
 
@@ -98,8 +118,7 @@ export async function exportFullDocx(content: FullDocumentContent, d1FallbackPng
           ...blueprintSectionParagraphs(content.health),
           ...blueprintSectionParagraphs(content.timeline),
 
-          new Paragraph({ text: content.remedies.heading, heading: HeadingLevel.HEADING_1 }),
-          new Paragraph({ children: [new TextRun({ text: content.remedies.notice, italics: true, color: "666666" })] }),
+          ...remediesSectionParagraphs(content.remedies),
 
           new Paragraph({
             children: [new TextRun({ text: content.settingsDisclosure, size: 16, color: "666666" })],
