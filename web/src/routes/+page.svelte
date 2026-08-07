@@ -7,7 +7,7 @@
 <ul class="tools">
 	<li><a href="/kundli">Kundli Calculator</a> -- South Indian Rasi (D1) and Navamsa (D9) charts</li>
 	<li class="pending">Panchang for any date -- coming soon</li>
-	<li class="pending">Dasha Timeline Viewer -- coming soon</li>
+	<li><a href="/dasha-timeline">Dasha Timeline Viewer</a> -- Mahadasha / Antardasha / Pratyantardasha</li>
 	<li class="pending">Birth-Time Confidence Checker -- coming soon</li>
 </ul>
 

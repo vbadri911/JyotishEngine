@@ -59,6 +59,7 @@ export {
   type DashaComputationResult,
 } from "./engine/dasha.js";
 export type { DashaPeriod, DashaLord } from "./types.js";
+export { formatUtcDate } from "./util/formatUtcDate.js";
 
 // Birth-time confidence checker. computeChart() (package root, ".") already
 // returns ChartData.confidenceFlags computed this same way -- this direct

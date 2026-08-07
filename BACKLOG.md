@@ -257,6 +257,27 @@ See `README.md` for current status.
      confirmed a pure extraction (16 existing tests re-run, unchanged). Root
      `/` now a minimal four-tool hub linking to `/kundli`; the other three
      tools listed as "coming soon," not yet linked. See `DECISIONS.md`.
+   - **Dasha Timeline Viewer page: BUILT -- the second of the four real
+     free tools.** `web/src/routes/dasha-timeline/+page.svelte`: an
+     expandable Mahadasha -> Antardasha -> Pratyantardasha tree (each level
+     computed lazily on click, not all 810 boundaries eagerly up front),
+     plus an "as of" date picker (`findActivePeriod()`) that finds and
+     auto-expands whichever period was/is/will be active on any date, not
+     just today. Reuses `BirthInputForm` as-is (no changes needed -- the
+     first real proof it's genuinely shareable, as intended when it was
+     built for the kundli calculator). Reuses `result.dasha` from
+     `computeChart()` (already `computeMahadashaSequence()`'s own output)
+     rather than calling that function a second time for the same input.
+     `formatUtcDate()` added to `free-tools.ts`'s export list for the
+     tree's date labels. Real golden-chart verification in a live browser
+     (fresh tab, dev server AND the real `adapter-static` production
+     build): all 9 Mahadasha boundaries match `reference-chart-1983.json`
+     within the same already-documented ~3-day systematic offset every
+     other dasha check in this project carries; Antardasha/Pratyantardasha
+     chaining and lord-sequencing confirmed internally consistent; the "as
+     of" feature independently verified against a specific historical date
+     from the checked-in dasha-detail fixture. See `DECISIONS.md`. Root `/`
+     updated -- no longer "coming soon."
    - **Panchang computation (tithi/vara/karana/yoga): BUILT.**
      `src/engine/panchang.ts` (`tithiFor`, `karanaFor`, `panchangYogaFor`,
      `nakshatraFor`, `varaFor`, `computePanchang`) plus
@@ -553,7 +574,7 @@ reconstructing from memory or a secondary source:
 
 ## Not started
 
-- P6 document assembly: the free-tools cluster remains the only unbuilt piece -- SVG chart (D1+D9), PDF/DOCX export at Essence/Overview depth, and Full Blueprint's own document/pagination pipeline are all built, and as of 2026-08-03/04 Full Blueprint is a genuine 8/8-section document (section 8, Remedies & Executive Summary, built and wired in -- see "Next up" above). Real, measured page count: 4 (not 5, not 40-60) -- briefly 5 immediately after Section 8 first landed, then back to 4 once a real Executive Summary ranking bug was found and fixed (see "Next up" above); re-measured each time specifically because content changed, not because the count was expected to move on its own; the architectural diagnosis (`render.ts` only ever quotes `Finding.statement` verbatim, never generates elaborated prose) is unchanged and still the reason the 40-60 estimate isn't close. Whether to pursue paid/BYOK LLM elaboration to actually close that gap is its own future design conversation, not started. Free-tools cluster's own two blocking design gates (UI framework; Panchang calculation method) were researched and written up 2026-08-07 (`DECISIONS.md` -- see "Next up" above); both are now implemented: Panchang is golden-chart-verified (`src/engine/panchang.ts`), and the UI framework is scaffolded (`web/`, Vite + SvelteKit + `adapter-static`). The Kundli Calculator (`web/src/routes/kundli/`) is the first of the four real free-tool pages, built and golden-chart-verified in a real browser. Panchang's own UI, the dasha timeline viewer, and the confidence checker are still open, separate work.
+- P6 document assembly: the free-tools cluster remains the only unbuilt piece -- SVG chart (D1+D9), PDF/DOCX export at Essence/Overview depth, and Full Blueprint's own document/pagination pipeline are all built, and as of 2026-08-03/04 Full Blueprint is a genuine 8/8-section document (section 8, Remedies & Executive Summary, built and wired in -- see "Next up" above). Real, measured page count: 4 (not 5, not 40-60) -- briefly 5 immediately after Section 8 first landed, then back to 4 once a real Executive Summary ranking bug was found and fixed (see "Next up" above); re-measured each time specifically because content changed, not because the count was expected to move on its own; the architectural diagnosis (`render.ts` only ever quotes `Finding.statement` verbatim, never generates elaborated prose) is unchanged and still the reason the 40-60 estimate isn't close. Whether to pursue paid/BYOK LLM elaboration to actually close that gap is its own future design conversation, not started. Free-tools cluster's own two blocking design gates (UI framework; Panchang calculation method) were researched and written up 2026-08-07 (`DECISIONS.md` -- see "Next up" above); both are now implemented: Panchang is golden-chart-verified (`src/engine/panchang.ts`), and the UI framework is scaffolded (`web/`, Vite + SvelteKit + `adapter-static`). The Kundli Calculator (`web/src/routes/kundli/`) and the Dasha Timeline Viewer (`web/src/routes/dasha-timeline/`) are the first two of the four real free-tool pages, both built and golden-chart-verified in a real browser. Panchang's own UI and the confidence checker are still open, separate work.
 - P7b Jupiter/Saturn transit ingress detection: search primitive and `.ics` export both done and validated (`src/engine/transit.ts`, `src/export/transitCalendar.ts` -- see "Next up" above); not yet wired into `computeChart()`'s output or merged with the dasha `.ics` into a single file
 - P7's versioned-regeneration-with-diffs requirement -- not yet scoped into either P7a or P7b
 - Timing's deferred "Timeline" scope (transit overlay, ranked/reasoned turning points) -- see "Known gaps" above
