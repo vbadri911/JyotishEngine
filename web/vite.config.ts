@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { defineConfig, type Plugin } from 'vite';
 
 /**
@@ -19,14 +20,18 @@ import { defineConfig, type Plugin } from 'vite';
  * rejects the mismatch ("Expected a JSON module script but the server
  * responded with a MIME type of text/javascript") -- confirmed directly in a
  * real dev-server browser session, not assumed from the error text alone.
- * This plugin serves exactly these two files as raw JSON (the correct
+ * This plugin serves exactly these files as raw JSON (the correct
  * Content-Type, no transform) before Vite's own JSON-to-JS middleware would
  * otherwise claim the request -- registered directly in configureServer
  * (not via its returned callback) so it runs BEFORE Vite's internal
  * middlewares, per Vite's own plugin-ordering documentation.
+ *
+ * admin1.json added 2026-08-07 alongside geocoding.ts's admin1/state-hint
+ * disambiguation fix -- it's dynamically imported with the same import
+ * attribute, so it needs the same fix, not a new one.
  */
 function rawJsonForImportAttributes(): Plugin {
-	const files = ['cities.json', 'countries.json'];
+	const files = ['cities.json', 'countries.json', 'admin1.json'];
 	return {
 		name: 'raw-json-for-import-attributes',
 		configureServer(server) {
@@ -71,6 +76,44 @@ export default defineConfig({
 			// rather than using SPA fallback mode, so it works on static hosts that don't
 			// support fallback rewrites, not just ones that do.
 			adapter: adapter()
+		}),
+		// @vite-pwa/sveltekit, not plain vite-plugin-pwa directly -- this session
+		// already hit several subtle SvelteKit+adapter-static integration gaps
+		// (fs.allow, JSON MIME types) that a generic Vite plugin wouldn't know to
+		// handle; this one is purpose-built for SvelteKit's own build/output shape.
+		SvelteKitPWA({
+			registerType: 'autoUpdate',
+			includeAssets: ['robots.txt'],
+			manifest: {
+				name: 'Jyotish Engine',
+				short_name: 'Jyotish Engine',
+				description:
+					'Open-source, client-side Vedic (Jyotish) chart tools. Computes entirely in your browser -- no birth data ever leaves your device.',
+				start_url: '/',
+				scope: '/',
+				display: 'standalone',
+				background_color: '#1a1a1a',
+				theme_color: '#ff3e00',
+				icons: [
+					{ src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+					{ src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+					{ src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+				]
+			},
+			workbox: {
+				// Precache the app shell (HTML/JS/CSS/icons), but NOT the geocoding
+				// dataset chunks (cities.json ~5.7MB, admin1.json ~86KB, bundled into
+				// content-hashed .js chunks whose names aren't predictable at config
+				// time) -- precaching them here would eagerly download the exact
+				// thing geocoding.ts's own lazy-load fix (2026-08-07) exists to avoid.
+				// maximumFileSizeToCacheInBytes below 3MB makes Workbox skip anything
+				// larger automatically, regardless of filename; showMaximumFileSize...
+				// =true keeps that a warning (the pre-0.20.2 vite-plugin-pwa default),
+				// not a build-failing error, since skipping this file is intentional.
+				globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+				maximumFileSizeToCacheInBytes: 3 * 1024 * 1024
+			},
+			showMaximumFileSizeToCacheInBytesWarning: true
 		})
 	]
 });

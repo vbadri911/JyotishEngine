@@ -6,9 +6,9 @@
 
 <ul class="tools">
 	<li><a href="/kundli">Kundli Calculator</a> -- South Indian Rasi (D1) and Navamsa (D9) charts</li>
-	<li class="pending">Panchang for any date -- coming soon</li>
+	<li><a href="/panchang">Panchang</a> -- Tithi, Vara, Karana, Yoga, Nakshatra for any date</li>
 	<li><a href="/dasha-timeline">Dasha Timeline Viewer</a> -- Mahadasha / Antardasha / Pratyantardasha</li>
-	<li class="pending">Birth-Time Confidence Checker -- coming soon</li>
+	<li><a href="/confidence">Birth-Time Confidence Checker</a> -- flags cusp/round-number sensitivities</li>
 </ul>
 
 <style>
@@ -22,8 +22,5 @@
 	.tools a {
 		font-weight: 600;
 		font-size: 1.1rem;
-	}
-	.pending {
-		color: #888;
 	}
 </style>

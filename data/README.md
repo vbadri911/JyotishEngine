@@ -36,10 +36,17 @@ contributors, licensed under
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). See this project's
 top-level README for the same notice -- both must carry it per the license.
 
-## Known gap: no admin1 (state/province) disambiguation
+## admin1 (state/province) disambiguation -- DONE (2026-08-07)
 
-`geocodePlace()` in `src/engine/geocoding.ts` disambiguates same-named cities
-by country, then by population -- it does not use state/province. Tracked in
-[`BACKLOG.md`](../BACKLOG.md), including the concrete failing example, why
-it wasn't fixed here, and what fixing it needs. `cities.json` already
-retains each city's raw admin1 code, so the fix is additive.
+`admin1.json` is GeoNames' own `admin1CodesASCII.txt` (3,865 entries,
+code -> name, e.g. `"US.IL": "Illinois"`), fetched directly from
+`download.geonames.org` -- unlike `cities.json`/`countries.json`, this file
+was reachable from THIS environment (a full Claude Code CLI session, not the
+originally-sandboxed chat session `cities.json` was built in) via
+`scripts/build-admin1-data.mjs`. `geocodePlace()` now disambiguates
+same-named cities by state/province first (if a hint matches an admin1
+name), then by country, then falls back to population -- previously only
+country-level disambiguation existed; see DECISIONS.md for the fix and its
+real-data verification (`tests/geocoding.test.ts`: "Springfield, Illinois,
+USA" now correctly resolves to Springfield, IL, not the higher-population
+Springfield, MO).

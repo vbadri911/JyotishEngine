@@ -306,6 +306,77 @@ See `README.md` for current status.
      (the free tools are standalone utility outputs per requirements-spec.md
      §8, not part of the interpretive Findings/report pipeline) -- that's
      still open, separate work.
+   - **Confidence Checker page: BUILT -- the third of the four real free
+     tools.** `web/src/routes/confidence/+page.svelte`: calls `computeChart()`
+     and reads `chart.confidenceFlags` directly (already
+     `computeConfidenceFlags()`'s own output) rather than calling that
+     function a second time. Absence of flags is stated as an explicit,
+     positive result, not left blank, per SKILL.md's own
+     report-absences-explicitly principle. Real golden-chart verification in
+     a live browser (fresh tab, dev server AND the real `adapter-static`
+     production build): reproduces exactly the 2 real flags this chart
+     triggers -- `ascendant_near_cusp` (matching `confidence.test.ts`'s own
+     existing golden-chart assertion) and `birth_time_round_number`
+     (predicted from reading `confidence.ts` before testing, then confirmed,
+     not discovered as a surprise). Reuses `BirthInputForm` unchanged. Root
+     `/` updated -- no longer "coming soon." See `DECISIONS.md`.
+   - **Panchang page: BUILT -- the fourth and last of the four real free
+     tools.** `web/src/routes/panchang/+page.svelte`: reuses `BirthInputForm`
+     unchanged and calls `computePanchang()` directly (no `computeChart()`
+     needed -- Panchang is the one tool that only needs Sun/Moon longitude
+     and the birth instant, not a full chart). A real discrepancy was caught
+     and flagged before this was built, not smoothed over: the instruction
+     that requested the Confidence Checker called it "the last of the four,"
+     but Panchang's engine had never gotten its own page (its earlier
+     wiring-check demo page was replaced by the Kundli Calculator) -- user
+     confirmed building it now. Real golden-chart verification, all five
+     elements, in a live browser (fresh tab, dev server AND the real
+     `adapter-static` production build): Shanivara, Ekadashi (Shukla Paksha),
+     Purva Phalguni pada 2, Dhruva, Vishti -- exact match to the raw
+     Prokerala source, the same standard `tests/panchang.test.ts` already
+     holds this engine to. Root `/` now links all four tools; the unused
+     `.pending` CSS class removed. See `DECISIONS.md`. **All four free tools
+     named in requirements-spec.md §8 now genuinely exist** -- the free-tools
+     cluster's UI is complete at v1 scope. Remaining open items (at the time):
+     geocoding admin1/state-hint disambiguation, a PWA manifest/service
+     worker, and code-splitting beyond the geocoding dataset.
+   - **Geocoding admin1 (state/province) disambiguation: DONE.**
+     `geocodePlace()`'s own long-standing KNOWN GAP (only country-level
+     disambiguation existed; state/province hints like "Illinois" in
+     "Springfield, Illinois, USA" were parsed but ignored, so ties fell back
+     to population and could return the wrong city). Closed via
+     `data/admin1.json` (GeoNames' own `admin1CodesASCII.txt`, fetched
+     directly -- `download.geonames.org` is reachable from this full Claude
+     Code CLI session even though it wasn't from the original sandboxed
+     session `cities.json`/`countries.json` were built in) and
+     `scripts/build-admin1-data.mjs`. `geocodePlace()` now tries an
+     admin1-code match first, then country, then population -- one more tier
+     on the same fallback chain, not a restructure. Real-data verification:
+     "Springfield, Illinois, USA" now correctly resolves to Springfield, IL
+     (lat 39.80172, matching `data/cities.json`'s own real entry) instead of
+     the higher-population Springfield, MO. Verified end-to-end through the
+     real Kundli Calculator UI too (dev server and the static production
+     build), not just at the engine/test level -- `admin1.json` needed the
+     same dev-only Vite MIME-type fix `cities.json`/`countries.json` already
+     had. `data/README.md`'s "Known gap" section rewritten to "DONE". See
+     `DECISIONS.md`. Suite: 372 -> 374.
+   - **PWA manifest and service worker: DONE** -- closes
+     requirements-spec.md §3's "a PWA manifest for offline and installable
+     use", the last open free-tools-cluster item. `@vite-pwa/sveltekit`
+     (`web/vite.config.ts`), a real on-brand icon generated via
+     `scripts/build-pwa-icons.mjs` (reusing `@resvg/resvg-js`, already a root
+     dependency -- not the SvelteKit scaffold's own default Svelte-logo
+     favicon), manifest link + service-worker registration wired into
+     `web/src/routes/+layout.svelte` (a real gap the plugin didn't handle
+     automatically, found by checking the actual built HTML, not assumed
+     from "zero-config" framing). The geocoding dataset chunks are
+     explicitly excluded from precaching (`maximumFileSizeToCacheInBytes`)
+     so installing the PWA doesn't silently undo the geocoding lazy-load fix
+     above. Verified in a real static-preview browser session: active
+     service-worker registration, valid fetched manifest, 37 precached
+     entries including `/kundli`'s own prerendered HTML (real offline
+     availability of the app shell, not just a manifest file existing on
+     disk). See `DECISIONS.md`.
    **Section 8 (Remedies & Executive Summary): BUILT AND WIRED IN --
    Full Blueprint is now a genuine 8/8-section document, real page count
    re-measured at 4 (via 5, briefly, before a real Executive Summary
@@ -574,7 +645,7 @@ reconstructing from memory or a secondary source:
 
 ## Not started
 
-- P6 document assembly: the free-tools cluster remains the only unbuilt piece -- SVG chart (D1+D9), PDF/DOCX export at Essence/Overview depth, and Full Blueprint's own document/pagination pipeline are all built, and as of 2026-08-03/04 Full Blueprint is a genuine 8/8-section document (section 8, Remedies & Executive Summary, built and wired in -- see "Next up" above). Real, measured page count: 4 (not 5, not 40-60) -- briefly 5 immediately after Section 8 first landed, then back to 4 once a real Executive Summary ranking bug was found and fixed (see "Next up" above); re-measured each time specifically because content changed, not because the count was expected to move on its own; the architectural diagnosis (`render.ts` only ever quotes `Finding.statement` verbatim, never generates elaborated prose) is unchanged and still the reason the 40-60 estimate isn't close. Whether to pursue paid/BYOK LLM elaboration to actually close that gap is its own future design conversation, not started. Free-tools cluster's own two blocking design gates (UI framework; Panchang calculation method) were researched and written up 2026-08-07 (`DECISIONS.md` -- see "Next up" above); both are now implemented: Panchang is golden-chart-verified (`src/engine/panchang.ts`), and the UI framework is scaffolded (`web/`, Vite + SvelteKit + `adapter-static`). The Kundli Calculator (`web/src/routes/kundli/`) and the Dasha Timeline Viewer (`web/src/routes/dasha-timeline/`) are the first two of the four real free-tool pages, both built and golden-chart-verified in a real browser. Panchang's own UI and the confidence checker are still open, separate work.
+- P6 document assembly: the free-tools cluster remains the only unbuilt piece -- SVG chart (D1+D9), PDF/DOCX export at Essence/Overview depth, and Full Blueprint's own document/pagination pipeline are all built, and as of 2026-08-03/04 Full Blueprint is a genuine 8/8-section document (section 8, Remedies & Executive Summary, built and wired in -- see "Next up" above). Real, measured page count: 4 (not 5, not 40-60) -- briefly 5 immediately after Section 8 first landed, then back to 4 once a real Executive Summary ranking bug was found and fixed (see "Next up" above); re-measured each time specifically because content changed, not because the count was expected to move on its own; the architectural diagnosis (`render.ts` only ever quotes `Finding.statement` verbatim, never generates elaborated prose) is unchanged and still the reason the 40-60 estimate isn't close. Whether to pursue paid/BYOK LLM elaboration to actually close that gap is its own future design conversation, not started. Free-tools cluster's own two blocking design gates (UI framework; Panchang calculation method) were researched and written up 2026-08-07 (`DECISIONS.md` -- see "Next up" above); both are now implemented: Panchang is golden-chart-verified (`src/engine/panchang.ts`), and the UI framework is scaffolded (`web/`, Vite + SvelteKit + `adapter-static`). **All four real free-tool pages are now built and golden-chart-verified in a real browser: Kundli Calculator (`web/src/routes/kundli/`), Panchang (`web/src/routes/panchang/`), Dasha Timeline Viewer (`web/src/routes/dasha-timeline/`), and the Confidence Checker (`web/src/routes/confidence/`).** The free-tools cluster's UI is complete at v1 scope. Geocoding's admin1/state-hint disambiguation gap is now closed too (`data/admin1.json`), and so is the PWA manifest/service worker (`@vite-pwa/sveltekit`, see "Next up" above) -- **every item requirements-spec.md §3/§8 named for the free-tools cluster is now built.** Remaining open item: bundle code-splitting beyond the geocoding dataset (a real, stated limitation, not a spec requirement).
 - P7b Jupiter/Saturn transit ingress detection: search primitive and `.ics` export both done and validated (`src/engine/transit.ts`, `src/export/transitCalendar.ts` -- see "Next up" above); not yet wired into `computeChart()`'s output or merged with the dasha `.ics` into a single file
 - P7's versioned-regeneration-with-diffs requirement -- not yet scoped into either P7a or P7b
 - Timing's deferred "Timeline" scope (transit overlay, ranked/reasoned turning points) -- see "Known gaps" above
