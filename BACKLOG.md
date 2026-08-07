@@ -204,11 +204,39 @@ See `README.md` for current status.
    explicitly parked as its own future design conversation, not scoped or
    started.** "Length follows data" (SKILL.md principle 3) may mean a shorter
    Full Blueprint is simply correct; not decided.
-   **Not yet built**: the free-tools cluster (needs this project's
-   first-ever UI-framework decision, AND separately, real Panchang
-   computation -- zero tithi/vara/karana logic exists anywhere in this
-   codebase or its reference material, a new Jyotish-domain feature
-   independent of the framework choice).
+   **Not yet built**: the free-tools cluster. Both of its blocking design
+   gates were researched and written up 2026-08-07 (`DECISIONS.md`), same
+   discipline as the PDF-library/SVG-chart-layout gates -- neither
+   implementation has started, both are waiting on confirmation to proceed:
+   - **UI framework** (this project's first-ever UI-framework decision):
+     three real options laid out (Vite+React, Vite+SvelteKit, Vite+Vue),
+     Vite+SvelteKit (`adapter-static`) recommended as the only one where
+     static-output fidelity, bundle size, and "already-Vite" (present
+     transitively via `vitest`, confirmed in `node_modules`) all point the
+     same direction rather than trading off against each other -- not a
+     large-margin call, Vue is a defensible second choice.
+   - **Panchang computation** (tithi/vara/karana/yoga -- zero logic or
+     reference material existed anywhere in this codebase before this pass):
+     researched and confirmed against a real primary source, Surya
+     Siddhanta (Burgess translation, archive.org -- BPHS itself doesn't
+     cover this; a horoscopy treatise, not a calendrical/astronomical one,
+     the first time this project has needed a source outside BPHS/
+     Phaladeepika for a subject-matter reason rather than a citation-quality
+     one). All four elements confirmed by chapter and verse (Ch. II v.64-69
+     for nakshatra/yoga/tithi/karana -- karana's 11-name cycle
+     cross-validated against the text's own worked numerical example, not
+     just reconstructed; Ch. I v.36/51-52 for vara, including a real,
+     worth-implementing-correctly subtlety: Panchang uses a sunrise-to-
+     sunrise civil day, not the midnight-to-midnight day Surya Siddhanta
+     itself uses for pure astronomical calculation). A real validation
+     fixture already exists with no new sourcing needed: the Prokerala raw
+     source checked into the repo this session states the golden chart's
+     own real Panchang (Nakshatra Purva Phalguni pada 2, Tithi Ekadashi
+     Shukla Paksha, Yoga Dhruva, Karana Vishti/Bhadra). Research complete;
+     implementation (a `references/panchang.md` skill file plus
+     `src/engine/panchang.ts`) not started. Structurally independent of the
+     UI framework decision -- a pure function like every other engine
+     module -- so the two gates don't have to resolve in a fixed order.
    **Section 8 (Remedies & Executive Summary): BUILT AND WIRED IN --
    Full Blueprint is now a genuine 8/8-section document, real page count
    re-measured at 4 (via 5, briefly, before a real Executive Summary
@@ -425,22 +453,31 @@ See `README.md` for current status.
 
 - **Golden chart: Sun, Mars, Rahu, and Ketu land just outside the stated
   1 arc-minute longitude tolerance** (1.20', 1.25', 1.03', 1.03'
-  respectively). 5/9 planets + Ascendant pass cleanly. Most likely
-  explanation: imprecision in this fixture's own hand-derived values, not a
-  pipeline bug (see reasoning in the fixture's `_status` field and
-  `DECISIONS.md`). Deliberately not "fixed" by tightening ephemeris
-  precision or widening tolerance -- resolve via a second, independent
-  golden chart once the set expands (item 1 above).
+  respectively). 5/9 planets + Ascendant pass cleanly. **RESOLVED as to
+  cause, 2026-08-07 (DECISIONS.md): NOT imprecision in this fixture's own
+  hand-derived values** -- the fixture's raw Prokerala source was located,
+  checked into the repo (`tests/golden-charts/sources/
+  reference-chart-1983-prokerala-raw.md`), and independently verified to
+  match the fixture's own numbers exactly, closing the "is this a
+  transcription error" question this entry originally raised. The real gap
+  is a genuine Prokerala-vs-this-project's-own-engine (`@swisseph/browser`,
+  Moshier-based) difference. **Still open**: which source is actually closer
+  to true -- that needs a genuinely independent THIRD source (not another
+  read of the same Prokerala report), same resolution path as item 1 above,
+  not tightening ephemeris precision or widening tolerance.
 
 - **Golden chart: every Mahadasha boundary date is a constant ~3 days off
-  from the fixture.** Downstream consequence of the same Moon-longitude gap
-  above, propagated through `birthBalance.balanceYears` -- exactly what
-  SKILL.md's `references/dasha.md` warns "a few arcminutes shifts the
-  balance by days, which compounds through every subsequent boundary." The
-  offset is constant across all 9 boundaries (not growing), which is the
-  expected signature of this cause, not of a chaining bug -- see
-  `DECISIONS.md`. Same resolution path as the item above: a second,
-  independent golden chart, not tightening ephemeris precision.
+  from the fixture** -- and, confirmed 2026-08-07, so is every Antardasha
+  and Pratyantardasha boundary beneath it (checked against the same raw
+  source, all 81 + 729 of them; the offset stays constant with depth, never
+  compounds). Downstream consequence of the same Moon-longitude gap above,
+  propagated through `birthBalance.balanceYears` -- exactly what SKILL.md's
+  `references/dasha.md` warns "a few arcminutes shifts the balance by days,
+  which compounds through every subsequent boundary." The offset is constant
+  across all 9 Mahadasha boundaries (not growing), which is the expected
+  signature of this cause, not of a chaining bug -- see `DECISIONS.md`. Same
+  resolution path as the item above: a genuinely independent third source,
+  not tightening ephemeris precision.
 
 ## Deferred features (out of scope for now)
 
@@ -468,7 +505,7 @@ reconstructing from memory or a secondary source:
 
 ## Not started
 
-- P6 document assembly: the free-tools cluster remains the only unbuilt piece -- SVG chart (D1+D9), PDF/DOCX export at Essence/Overview depth, and Full Blueprint's own document/pagination pipeline are all built, and as of 2026-08-03/04 Full Blueprint is a genuine 8/8-section document (section 8, Remedies & Executive Summary, built and wired in -- see "Next up" above). Real, measured page count: 4 (not 5, not 40-60) -- briefly 5 immediately after Section 8 first landed, then back to 4 once a real Executive Summary ranking bug was found and fixed (see "Next up" above); re-measured each time specifically because content changed, not because the count was expected to move on its own; the architectural diagnosis (`render.ts` only ever quotes `Finding.statement` verbatim, never generates elaborated prose) is unchanged and still the reason the 40-60 estimate isn't close. Whether to pursue paid/BYOK LLM elaboration to actually close that gap is its own future design conversation, not started.
+- P6 document assembly: the free-tools cluster remains the only unbuilt piece -- SVG chart (D1+D9), PDF/DOCX export at Essence/Overview depth, and Full Blueprint's own document/pagination pipeline are all built, and as of 2026-08-03/04 Full Blueprint is a genuine 8/8-section document (section 8, Remedies & Executive Summary, built and wired in -- see "Next up" above). Real, measured page count: 4 (not 5, not 40-60) -- briefly 5 immediately after Section 8 first landed, then back to 4 once a real Executive Summary ranking bug was found and fixed (see "Next up" above); re-measured each time specifically because content changed, not because the count was expected to move on its own; the architectural diagnosis (`render.ts` only ever quotes `Finding.statement` verbatim, never generates elaborated prose) is unchanged and still the reason the 40-60 estimate isn't close. Whether to pursue paid/BYOK LLM elaboration to actually close that gap is its own future design conversation, not started. Free-tools cluster's own two blocking design gates (UI framework; Panchang calculation method) were researched and written up 2026-08-07 (`DECISIONS.md` -- see "Next up" above) but neither is confirmed or implemented yet.
 - P7b Jupiter/Saturn transit ingress detection: search primitive and `.ics` export both done and validated (`src/engine/transit.ts`, `src/export/transitCalendar.ts` -- see "Next up" above); not yet wired into `computeChart()`'s output or merged with the dasha `.ics` into a single file
 - P7's versioned-regeneration-with-diffs requirement -- not yet scoped into either P7a or P7b
 - Timing's deferred "Timeline" scope (transit overlay, ranked/reasoned turning points) -- see "Known gaps" above
