@@ -1,0 +1,31 @@
+{
+  "_source": "See references/panchang.md for full derivation and citations. Surya Siddhanta (Burgess translation), Ch. II v.64-69 for tithi/karana/yoga/nakshatra; Ch. I v.36 commentary + v.51-52 for the vara sunrise-to-sunrise civil-day rule.",
+  "tithi": {
+    "_rule": "number = floor(((Moon - Sun) mod 360) / 12) + 1, range 1-30. 1-15 = Shukla Paksha (15 = Purnima), 16-30 = Krishna Paksha (30 = Amavasya). The 15 names below are standard Sanskrit tithi nomenclature (numerals 1st-14th plus the two special names) -- not verse text quoted from Ch. II itself, which gives only the numeric/paksha scheme.",
+      "names": [
+      "Pratipada", "Dwitiya", "Tritiya", "Chaturthi", "Panchami",
+      "Shashthi", "Saptami", "Ashtami", "Navami", "Dashami",
+      "Ekadashi", "Dwadashi", "Trayodashi", "Chaturdashi", "Purnima"
+    ],
+    "amavasyaName": "Amavasya"
+  },
+  "karana": {
+    "_rule": "number = floor(((Moon - Sun) mod 360) / 6) + 1, range 1-60 (half-tithi). Karana #1 = Kimstughna (fixed). #2-57 = the 7-name chara (movable) cycle repeated 8 times. #58-60 = Sakuni, Naga, Chatushpada (fixed), in that order. Cross-validated against Ch. II's own worked numerical example (karana #15 = Vishti) -- see DECISIONS.md 2026-08-07.",
+    "fixedFirst": "Kimstughna",
+    "chara": ["Bava", "Balava", "Kaulava", "Taitila", "Gara", "Vanija", "Vishti"],
+    "fixedLast": ["Sakuni", "Naga", "Chatushpada"]
+  },
+  "yoga": {
+    "_rule": "number = floor(((Sun + Moon) mod 360) / 13.3333) + 1, range 1-27. This is the Nakshatra-yoga (Ch. II v.65) -- a distinct classical concept from this project's Raja/Gajakesari-type yogas (src/rules/yogas.ts); same English word, different thing. Do not conflate.",
+    "names": [
+      "Vishkambha", "Priti", "Ayushmanta", "Saubhagya", "Shobhana", "Atiganda", "Sukarman", "Dhriti", "Shula",
+      "Ganda", "Vriddhi", "Dhruva", "Vyaghata", "Harshana", "Vajra", "Siddhi", "Vyatipata", "Variyas", "Parigha",
+      "Shiva", "Siddha", "Sadhya", "Shubha", "Shukla", "Brahma", "Indra", "Vaidhriti"
+    ]
+  },
+  "vara": {
+    "_rule": "Civil (sunrise-to-sunrise) weekday, not the midnight-to-midnight astronomical day Surya Siddhanta itself uses for calculation (Ch. I v.36 commentary: 'for the practical uses of life, the Hindus count it from sunrise to sunrise'). A birth before local sunrise takes the PRECEDING calendar date's weekday.",
+    "names": ["Ravivara", "Somavara", "Mangalavara", "Budhavara", "Guruvara", "Shukravara", "Shanivara"],
+    "namesIndexNote": "0 = Sunday (Ravivara) ... 6 = Saturday (Shanivara), matching JS/Luxon weekday-mod-7 convention."
+  }
+}

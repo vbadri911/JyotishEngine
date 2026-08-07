@@ -204,39 +204,65 @@ See `README.md` for current status.
    explicitly parked as its own future design conversation, not scoped or
    started.** "Length follows data" (SKILL.md principle 3) may mean a shorter
    Full Blueprint is simply correct; not decided.
-   **Not yet built**: the free-tools cluster. Both of its blocking design
-   gates were researched and written up 2026-08-07 (`DECISIONS.md`), same
-   discipline as the PDF-library/SVG-chart-layout gates -- neither
-   implementation has started, both are waiting on confirmation to proceed:
-   - **UI framework** (this project's first-ever UI-framework decision):
-     three real options laid out (Vite+React, Vite+SvelteKit, Vite+Vue),
-     Vite+SvelteKit (`adapter-static`) recommended as the only one where
-     static-output fidelity, bundle size, and "already-Vite" (present
-     transitively via `vitest`, confirmed in `node_modules`) all point the
-     same direction rather than trading off against each other -- not a
-     large-margin call, Vue is a defensible second choice.
-   - **Panchang computation** (tithi/vara/karana/yoga -- zero logic or
-     reference material existed anywhere in this codebase before this pass):
-     researched and confirmed against a real primary source, Surya
-     Siddhanta (Burgess translation, archive.org -- BPHS itself doesn't
-     cover this; a horoscopy treatise, not a calendrical/astronomical one,
-     the first time this project has needed a source outside BPHS/
-     Phaladeepika for a subject-matter reason rather than a citation-quality
-     one). All four elements confirmed by chapter and verse (Ch. II v.64-69
-     for nakshatra/yoga/tithi/karana -- karana's 11-name cycle
-     cross-validated against the text's own worked numerical example, not
-     just reconstructed; Ch. I v.36/51-52 for vara, including a real,
-     worth-implementing-correctly subtlety: Panchang uses a sunrise-to-
-     sunrise civil day, not the midnight-to-midnight day Surya Siddhanta
-     itself uses for pure astronomical calculation). A real validation
-     fixture already exists with no new sourcing needed: the Prokerala raw
-     source checked into the repo this session states the golden chart's
-     own real Panchang (Nakshatra Purva Phalguni pada 2, Tithi Ekadashi
-     Shukla Paksha, Yoga Dhruva, Karana Vishti/Bhadra). Research complete;
-     implementation (a `references/panchang.md` skill file plus
-     `src/engine/panchang.ts`) not started. Structurally independent of the
-     UI framework decision -- a pure function like every other engine
-     module -- so the two gates don't have to resolve in a fixed order.
+   **Not yet built (real free-tools UI)**: both of the cluster's blocking
+   design gates were researched and written up 2026-08-07 (`DECISIONS.md`),
+   same discipline as the PDF-library/SVG-chart-layout gates -- both are now
+   implemented (2026-08-07):
+   - **UI framework: SCAFFOLDED.** Vite + SvelteKit (`adapter-static`),
+     recommended earlier this session as the only one where static-output
+     fidelity, bundle size, and "already-Vite" (present transitively via
+     `vitest`) all point the same direction. Lives in a new `web/`
+     subdirectory app (Option 1 of three repo-layout choices laid out and
+     confirmed this session: separate app + own `package.json`, not a full
+     npm-workspaces restructure of the existing, already-tested engine) with
+     `jyotish-engine` wired in as a `file:..` dependency (root `package.json`
+     gained `main`/`types` fields so `dist/` -- which already built cleanly,
+     just had no declared entry point -- is actually consumable;
+     `web/`'s `predev`/`prebuild` scripts rebuild it automatically so it
+     can't go stale). A real integration bug (Vite's dev-server filesystem
+     sandbox 403ing `@swisseph/browser`'s `.wasm` file, since it resolves
+     outside `web/`'s own root through the symlinked dependency) was found
+     by actually loading the app in a browser and fixed with
+     `server.fs.allow` in `web/vite.config.ts` -- confirmed fixed in a real
+     browser session (200 OK, real WASM init log), not just "the config
+     changed." A demo page (`web/src/routes/+page.svelte`) proves the whole
+     chain end to end: both `npm run dev` and the real static
+     `adapter-static` production build (`npm run preview`) render the
+     golden chart's own real Panchang, computed live in-browser via
+     `computePanchang()` inside `onMount` (never during prerendering, per
+     this project's zero-server-computation design). `.claude/launch.json`
+     added for `run`/browser-preview tooling. **Still open**: the real
+     kundli-calculator/Panchang/dasha-timeline-viewer/confidence-checker UI
+     itself (this demo page is a wiring check only, not that UI); a PWA
+     manifest/service worker (requirements-spec.md SS3, not added this
+     pass); code-splitting the ~5.7MB `data/cities.json` geocoding dataset
+     out of the main bundle.
+   - **Panchang computation (tithi/vara/karana/yoga): BUILT.**
+     `src/engine/panchang.ts` (`tithiFor`, `karanaFor`, `panchangYogaFor`,
+     `nakshatraFor`, `varaFor`, `computePanchang`) plus
+     `.claude/skills/jyotish-engine/references/panchang.md` and
+     `config/panchang.json`, per the Surya Siddhanta sourcing (Burgess
+     translation, Ch. II v.64-69 for nakshatra/yoga/tithi/karana, Ch. I
+     v.36/51-52 for vara's sunrise-to-sunrise civil day) already researched
+     and confirmed 2026-08-07. `@swisseph/browser` has no rise/transit/set
+     function (confirmed by reading its full API) -- vara's sunrise
+     boundary uses a new, self-contained, cited sunrise primitive instead
+     (Meeus low-precision solar position algorithm, same as NOAA's ESRL
+     Solar Calculator), empirically validated to 2m49s against the golden
+     chart's real reported sunrise (05:55 AM IST, Chennai, 1983-04-23). A
+     real bug (`cos` used where the hour-angle formula needs `sin` of the
+     sunrise altitude, a >6 hour error) was caught specifically by testing
+     against that real reference value, not by internal consistency alone
+     -- see `DECISIONS.md`. `computePanchang()` run through the real
+     pipeline reproduces all five of the golden chart's own Prokerala-
+     reported panchang elements exactly (Nakshatra Purva Phalguni pada 2,
+     Tithi Ekadashi Shukla Paksha, Yoga Dhruva, Karana Vishti, Vara
+     Shanivara/Saturday). `tests/panchang.test.ts`, 17 tests. Suite:
+     355 -> 372. Proven reachable from the new `web/` SvelteKit scaffold
+     (below) via a wiring-proof demo page, not yet built into the real
+     Panchang tool UI itself (the free tools are standalone utility outputs
+     per requirements-spec.md §8, not part of the interpretive
+     Findings/report pipeline) -- that's still open, separate work.
    **Section 8 (Remedies & Executive Summary): BUILT AND WIRED IN --
    Full Blueprint is now a genuine 8/8-section document, real page count
    re-measured at 4 (via 5, briefly, before a real Executive Summary
@@ -505,7 +531,7 @@ reconstructing from memory or a secondary source:
 
 ## Not started
 
-- P6 document assembly: the free-tools cluster remains the only unbuilt piece -- SVG chart (D1+D9), PDF/DOCX export at Essence/Overview depth, and Full Blueprint's own document/pagination pipeline are all built, and as of 2026-08-03/04 Full Blueprint is a genuine 8/8-section document (section 8, Remedies & Executive Summary, built and wired in -- see "Next up" above). Real, measured page count: 4 (not 5, not 40-60) -- briefly 5 immediately after Section 8 first landed, then back to 4 once a real Executive Summary ranking bug was found and fixed (see "Next up" above); re-measured each time specifically because content changed, not because the count was expected to move on its own; the architectural diagnosis (`render.ts` only ever quotes `Finding.statement` verbatim, never generates elaborated prose) is unchanged and still the reason the 40-60 estimate isn't close. Whether to pursue paid/BYOK LLM elaboration to actually close that gap is its own future design conversation, not started. Free-tools cluster's own two blocking design gates (UI framework; Panchang calculation method) were researched and written up 2026-08-07 (`DECISIONS.md` -- see "Next up" above) but neither is confirmed or implemented yet.
+- P6 document assembly: the free-tools cluster remains the only unbuilt piece -- SVG chart (D1+D9), PDF/DOCX export at Essence/Overview depth, and Full Blueprint's own document/pagination pipeline are all built, and as of 2026-08-03/04 Full Blueprint is a genuine 8/8-section document (section 8, Remedies & Executive Summary, built and wired in -- see "Next up" above). Real, measured page count: 4 (not 5, not 40-60) -- briefly 5 immediately after Section 8 first landed, then back to 4 once a real Executive Summary ranking bug was found and fixed (see "Next up" above); re-measured each time specifically because content changed, not because the count was expected to move on its own; the architectural diagnosis (`render.ts` only ever quotes `Finding.statement` verbatim, never generates elaborated prose) is unchanged and still the reason the 40-60 estimate isn't close. Whether to pursue paid/BYOK LLM elaboration to actually close that gap is its own future design conversation, not started. Free-tools cluster's own two blocking design gates (UI framework; Panchang calculation method) were researched and written up 2026-08-07 (`DECISIONS.md` -- see "Next up" above); both are now implemented: Panchang is golden-chart-verified (`src/engine/panchang.ts`), and the UI framework is scaffolded (`web/`, Vite + SvelteKit + `adapter-static`, with a real browser-verified wiring-proof demo page). The real free-tools UI itself (kundli calculator, Panchang, dasha timeline viewer, confidence checker) is still open, separate work.
 - P7b Jupiter/Saturn transit ingress detection: search primitive and `.ics` export both done and validated (`src/engine/transit.ts`, `src/export/transitCalendar.ts` -- see "Next up" above); not yet wired into `computeChart()`'s output or merged with the dasha `.ics` into a single file
 - P7's versioned-regeneration-with-diffs requirement -- not yet scoped into either P7a or P7b
 - Timing's deferred "Timeline" scope (transit overlay, ranked/reasoned turning points) -- see "Known gaps" above

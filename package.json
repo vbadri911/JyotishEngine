@@ -5,6 +5,18 @@
   "license": "AGPL-3.0-only",
   "type": "module",
   "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./free-tools": {
+      "types": "./dist/free-tools.d.ts",
+      "default": "./dist/free-tools.js"
+    }
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
@@ -24,11 +36,13 @@
     "@types/luxon": "^3.4.2",
     "@types/node": "^20.14.0",
     "@types/pdfmake": "^0.3.3",
-    "typescript": "^5.5.0",
+    "typescript": "^6.0.3",
     "vitest": "^2.0.0"
   },
   "notes": {
     "ephemeris": "@swisseph/browser chosen after empirical evaluation (see DECISIONS.md) -- computeRawPositions() in src/engine/ephemeris.ts is not yet wired to it. astro-sweph and swisseph-wasm were evaluated and rejected.",
-    "geocoding": "GeoNames cities15000 dataset is not yet bundled. See data/README.md for the download step (requires network access this environment doesn't have — do this step in Claude Code, not in a sandboxed chat session)."
+    "geocoding": "GeoNames cities15000 dataset is not yet bundled. See data/README.md for the download step (requires network access this environment doesn't have — do this step in Claude Code, not in a sandboxed chat session).",
+    "main/types": "Added 2026-08-07 so web/ (the free-tools SvelteKit app) can consume this package via a `file:..` dependency -- `npm run build` already worked (tsc -p tsconfig.json -> dist/, gitignored) but nothing pointed at its output until now. web/'s own package.json runs this build automatically (predev/prebuild) so dist/ can't go stale relative to src/; there is no watch-mode wiring yet, so an engine change requires web/'s dev server to restart (or a manual `npm run build` here) to pick it up.",
+    "exports": "Added 2026-08-07 alongside src/free-tools.ts, a second barrel (sibling to index.ts's computeChart() pipeline) for the free-tools cluster's own API surface (Panchang, dasha timeline, kundli/South Indian chart rendering, confidence checker, geocoding). Two subpaths only -- \".\" (index.ts) and \"./free-tools\" (free-tools.ts) -- deliberately not a per-module exports map, so a new tool needing something not yet exposed adds one line to free-tools.ts, not a new package.json entry. See DECISIONS.md."
   }
 }
