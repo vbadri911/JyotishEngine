@@ -6,8 +6,8 @@ import type { BirthInput, ResolvedLocation } from "../types.js";
 import { geocodePlace } from "./geocoding.js";
 import { resolveUtcOffset } from "./timezone.js";
 
-export function resolveLocation(input: BirthInput): ResolvedLocation | null {
-  const geo = geocodePlace(input.placeText);
+export async function resolveLocation(input: BirthInput): Promise<ResolvedLocation | null> {
+  const geo = await geocodePlace(input.placeText);
   if (!geo) return null;
 
   const { utcOffsetMinutes, historicalTimezoneCaveat } = resolveUtcOffset(

@@ -49,7 +49,7 @@ export async function computeChart(
   dasha: DashaComputationResult;
   currentDashaPeriod: DashaPeriod | null;
 }> {
-  const location = resolveLocation(input);
+  const location = await resolveLocation(input);
   if (!location) {
     throw new Error(
       `Could not resolve location for "${input.placeText}" -- see data/README.md and BACKLOG.md ` +

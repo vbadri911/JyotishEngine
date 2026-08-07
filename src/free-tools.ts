@@ -14,7 +14,7 @@
  */
 
 // Shared input/settings types every free tool needs.
-export type { BirthInput, EngineSettings, ChartData, Graha, SignName } from "./types.js";
+export type { BirthInput, BirthTimePrecision, EngineSettings, ChartData, Graha, SignName } from "./types.js";
 export { DEFAULT_ENGINE_SETTINGS } from "./types.js";
 
 // Location resolution (place text -> lat/long/timezone) -- all four tools need this.
@@ -41,6 +41,7 @@ export {
 // South Indian chart rendering (kundli calculator's D1, and D9 for the same page).
 export {
   renderSouthIndianChartSVG,
+  buildD1ChartInput,
   type SouthIndianChartInput,
   type SouthIndianChartPlanet,
   type SouthIndianChartOptions,

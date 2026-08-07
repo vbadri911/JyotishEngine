@@ -231,12 +231,32 @@ See `README.md` for current status.
      golden chart's own real Panchang, computed live in-browser via
      `computePanchang()` inside `onMount` (never during prerendering, per
      this project's zero-server-computation design). `.claude/launch.json`
-     added for `run`/browser-preview tooling. **Still open**: the real
-     kundli-calculator/Panchang/dasha-timeline-viewer/confidence-checker UI
-     itself (this demo page is a wiring check only, not that UI); a PWA
-     manifest/service worker (requirements-spec.md SS3, not added this
-     pass); code-splitting the ~5.7MB `data/cities.json` geocoding dataset
-     out of the main bundle.
+     added for `run`/browser-preview tooling. This wiring-check demo page
+     has since been REPLACED by the real Kundli Calculator page (below) --
+     it no longer exists as a separate route. A PWA manifest/service worker
+     (requirements-spec.md SS3) is still not added. The ~5.7MB
+     `data/cities.json` geocoding dataset is now code-split out of the main
+     bundle (`src/engine/geocoding.ts`, `geocodePlace()`/`resolveLocation()`
+     made async, lazy `import()` cached after first call -- see
+     `DECISIONS.md`, includes a real dev-only Vite MIME-type fix for
+     `web/vite.config.ts`) -- done, not open.
+   - **Kundli Calculator page: BUILT -- the first of the four real free
+     tools.** `web/src/routes/kundli/+page.svelte` (South Indian D1 + D9
+     charts, a 9-planet position table) plus
+     `web/src/lib/components/BirthInputForm.svelte`, the shared
+     date/time/place/precision input every one of the four tools needs, built
+     as its own reusable component from the start rather than inlined in
+     this one page. Calls the real `computeChart()` client-side, only from a
+     click handler, never at prerender time. Real golden-chart verification
+     in an actual browser (fresh tab, both dev server and the real
+     `adapter-static` production build): Ascendant, all 9 planets, and both
+     the D1 and D9 chart grids match `reference-chart-1983.json` exactly.
+     Along the way, extracted `buildD1ChartInput()` (`southIndianChart.ts`,
+     the D9-side `buildD9ChartInput()`'s counterpart) out of
+     `natalChartSection.ts`'s own previously-duplicated inline version --
+     confirmed a pure extraction (16 existing tests re-run, unchanged). Root
+     `/` now a minimal four-tool hub linking to `/kundli`; the other three
+     tools listed as "coming soon," not yet linked. See `DECISIONS.md`.
    - **Panchang computation (tithi/vara/karana/yoga): BUILT.**
      `src/engine/panchang.ts` (`tithiFor`, `karanaFor`, `panchangYogaFor`,
      `nakshatraFor`, `varaFor`, `computePanchang`) plus
@@ -258,11 +278,13 @@ See `README.md` for current status.
      reported panchang elements exactly (Nakshatra Purva Phalguni pada 2,
      Tithi Ekadashi Shukla Paksha, Yoga Dhruva, Karana Vishti, Vara
      Shanivara/Saturday). `tests/panchang.test.ts`, 17 tests. Suite:
-     355 -> 372. Proven reachable from the new `web/` SvelteKit scaffold
-     (below) via a wiring-proof demo page, not yet built into the real
-     Panchang tool UI itself (the free tools are standalone utility outputs
-     per requirements-spec.md §8, not part of the interpretive
-     Findings/report pipeline) -- that's still open, separate work.
+     355 -> 372. Its real reachability from `web/` was proven via a
+     wiring-check demo page (since replaced by the real Kundli Calculator
+     page, below) -- the Panchang tool's OWN UI (as opposed to the Kundli
+     Calculator, the first of the four to get a real page) is not yet built
+     (the free tools are standalone utility outputs per requirements-spec.md
+     §8, not part of the interpretive Findings/report pipeline) -- that's
+     still open, separate work.
    **Section 8 (Remedies & Executive Summary): BUILT AND WIRED IN --
    Full Blueprint is now a genuine 8/8-section document, real page count
    re-measured at 4 (via 5, briefly, before a real Executive Summary
@@ -531,7 +553,7 @@ reconstructing from memory or a secondary source:
 
 ## Not started
 
-- P6 document assembly: the free-tools cluster remains the only unbuilt piece -- SVG chart (D1+D9), PDF/DOCX export at Essence/Overview depth, and Full Blueprint's own document/pagination pipeline are all built, and as of 2026-08-03/04 Full Blueprint is a genuine 8/8-section document (section 8, Remedies & Executive Summary, built and wired in -- see "Next up" above). Real, measured page count: 4 (not 5, not 40-60) -- briefly 5 immediately after Section 8 first landed, then back to 4 once a real Executive Summary ranking bug was found and fixed (see "Next up" above); re-measured each time specifically because content changed, not because the count was expected to move on its own; the architectural diagnosis (`render.ts` only ever quotes `Finding.statement` verbatim, never generates elaborated prose) is unchanged and still the reason the 40-60 estimate isn't close. Whether to pursue paid/BYOK LLM elaboration to actually close that gap is its own future design conversation, not started. Free-tools cluster's own two blocking design gates (UI framework; Panchang calculation method) were researched and written up 2026-08-07 (`DECISIONS.md` -- see "Next up" above); both are now implemented: Panchang is golden-chart-verified (`src/engine/panchang.ts`), and the UI framework is scaffolded (`web/`, Vite + SvelteKit + `adapter-static`, with a real browser-verified wiring-proof demo page). The real free-tools UI itself (kundli calculator, Panchang, dasha timeline viewer, confidence checker) is still open, separate work.
+- P6 document assembly: the free-tools cluster remains the only unbuilt piece -- SVG chart (D1+D9), PDF/DOCX export at Essence/Overview depth, and Full Blueprint's own document/pagination pipeline are all built, and as of 2026-08-03/04 Full Blueprint is a genuine 8/8-section document (section 8, Remedies & Executive Summary, built and wired in -- see "Next up" above). Real, measured page count: 4 (not 5, not 40-60) -- briefly 5 immediately after Section 8 first landed, then back to 4 once a real Executive Summary ranking bug was found and fixed (see "Next up" above); re-measured each time specifically because content changed, not because the count was expected to move on its own; the architectural diagnosis (`render.ts` only ever quotes `Finding.statement` verbatim, never generates elaborated prose) is unchanged and still the reason the 40-60 estimate isn't close. Whether to pursue paid/BYOK LLM elaboration to actually close that gap is its own future design conversation, not started. Free-tools cluster's own two blocking design gates (UI framework; Panchang calculation method) were researched and written up 2026-08-07 (`DECISIONS.md` -- see "Next up" above); both are now implemented: Panchang is golden-chart-verified (`src/engine/panchang.ts`), and the UI framework is scaffolded (`web/`, Vite + SvelteKit + `adapter-static`). The Kundli Calculator (`web/src/routes/kundli/`) is the first of the four real free-tool pages, built and golden-chart-verified in a real browser. Panchang's own UI, the dasha timeline viewer, and the confidence checker are still open, separate work.
 - P7b Jupiter/Saturn transit ingress detection: search primitive and `.ics` export both done and validated (`src/engine/transit.ts`, `src/export/transitCalendar.ts` -- see "Next up" above); not yet wired into `computeChart()`'s output or merged with the dasha `.ics` into a single file
 - P7's versioned-regeneration-with-diffs requirement -- not yet scoped into either P7a or P7b
 - Timing's deferred "Timeline" scope (transit overlay, ranked/reasoned turning points) -- see "Known gaps" above
