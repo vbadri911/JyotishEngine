@@ -101,15 +101,18 @@ export default defineConfig({
 				]
 			},
 			workbox: {
-				// Precache the app shell (HTML/JS/CSS/icons), but NOT the geocoding
-				// dataset chunks (cities.json ~5.7MB, admin1.json ~86KB, bundled into
-				// content-hashed .js chunks whose names aren't predictable at config
-				// time) -- precaching them here would eagerly download the exact
-				// thing geocoding.ts's own lazy-load fix (2026-08-07) exists to avoid.
-				// maximumFileSizeToCacheInBytes below 3MB makes Workbox skip anything
-				// larger automatically, regardless of filename; showMaximumFileSize...
-				// =true keeps that a warning (the pre-0.20.2 vite-plugin-pwa default),
-				// not a build-failing error, since skipping this file is intentional.
+				// Precache the app shell (HTML/JS/CSS/icons), but NOT cities.json's
+				// ~5.7MB chunk (bundled into a content-hashed .js filename that isn't
+				// predictable at config time) -- precaching it here would eagerly
+				// download the exact thing geocoding.ts's own lazy-load fix
+				// (2026-08-07) exists to avoid. maximumFileSizeToCacheInBytes below
+				// 3MB makes Workbox skip it automatically, regardless of filename;
+				// showMaximumFileSize...=true keeps that a warning (the pre-0.20.2
+				// vite-plugin-pwa default), not a build-failing error, since skipping
+				// it is intentional. admin1.json's own chunk (~86KB) is well under
+				// this threshold and IS precached -- confirmed directly against the
+				// built sw.js, not assumed; harmless at that size, so no special
+				// exclusion was added for it.
 				globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
 				maximumFileSizeToCacheInBytes: 3 * 1024 * 1024
 			},

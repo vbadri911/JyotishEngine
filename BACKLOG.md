@@ -369,10 +369,14 @@ See `README.md` for current status.
      favicon), manifest link + service-worker registration wired into
      `web/src/routes/+layout.svelte` (a real gap the plugin didn't handle
      automatically, found by checking the actual built HTML, not assumed
-     from "zero-config" framing). The geocoding dataset chunks are
-     explicitly excluded from precaching (`maximumFileSizeToCacheInBytes`)
-     so installing the PWA doesn't silently undo the geocoding lazy-load fix
-     above. Verified in a real static-preview browser session: active
+     from "zero-config" framing). `cities.json`'s ~5.7MB chunk is explicitly
+     excluded from precaching (`maximumFileSizeToCacheInBytes`) so
+     installing the PWA doesn't silently undo the geocoding lazy-load fix
+     above -- `admin1.json`'s own much smaller chunk (~86KB) is under the
+     threshold and IS precached, confirmed directly against the built
+     `sw.js` (an earlier version of this note incorrectly implied both were
+     excluded the same way; corrected 2026-08-07, see `DECISIONS.md`).
+     Verified in a real static-preview browser session: active
      service-worker registration, valid fetched manifest, 37 precached
      entries including `/kundli`'s own prerendered HTML (real offline
      availability of the app shell, not just a manifest file existing on
