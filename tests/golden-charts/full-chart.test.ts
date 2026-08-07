@@ -1,9 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { DateTime } from "luxon";
 import { computeChart } from "../../src/index.js";
+import { computeAntardashas, computePratyantardashas } from "../../src/engine/dasha.js";
 import { navamsaSign } from "../../src/engine/varga.js";
 import { DEFAULT_ENGINE_SETTINGS, type Graha, type SignName } from "../../src/types.js";
 import fixture from "./reference-chart-1983.json";
+import dashaDetailFixture from "./reference-chart-1983-dasha-detail.json";
 import nakshatraData from "../../data/nakshatras.json" with { type: "json" };
 
 const TOLERANCE_ARCMIN = 1;
@@ -138,5 +140,52 @@ describe("golden chart: full computeChart() pipeline vs reference-chart-1983", (
         `mahadasha[${i}] (${expected.lord}) start date off by ${startDelta} days`
       ).toBeLessThanOrEqual(DASHA_DATE_TOLERANCE_DAYS);
     }
+
+    // --- Antardasha (81) and Pratyantardasha (729) boundaries, against the SAME
+    // Prokerala source, independently re-verified 2026-08-07 (DECISIONS.md) ---
+    // reference-chart-1983-dasha-detail.json's own note has the full provenance and
+    // internal-consistency check. Same constant-offset reasoning as Mahadasha above,
+    // confirmed empirically (not assumed) to hold at these deeper levels too before
+    // this test was written: sampled real computed output against the fixture at both
+    // levels and found the SAME -3 to -4 day offset throughout, never compounding
+    // further with depth -- so the same DASHA_DATE_TOLERANCE_DAYS applies unchanged.
+    const startDateDeltaDays = (actualISO: string, expectedYMD: string) =>
+      Math.abs(DateTime.fromFormat(localDateOf(actualISO), "yyyy-MM-dd").diff(DateTime.fromFormat(expectedYMD, "yyyy-MM-dd"), "days").days);
+
+    const expAntardashas = dashaDetailFixture.antardashaSequence;
+    expect(expAntardashas.length, "antardasha fixture count").toBe(81);
+    let antardashaChecks = 0;
+    for (const md of dasha.mahadashas) {
+      const antardashas = computeAntardashas(md);
+      expect(antardashas.length, `${md.lord} antardasha count`).toBe(9);
+      for (const ad of antardashas) {
+        const expected = expAntardashas.find((a) => a.mahadashaLord === md.lord && a.antardashaLord === ad.lord);
+        expect(expected, `no fixture antardasha for ${md.lord}/${ad.lord}`).toBeDefined();
+        const delta = startDateDeltaDays(ad.start, expected!.start);
+        expect(delta, `antardasha ${md.lord}/${ad.lord} start date off by ${delta} days`).toBeLessThanOrEqual(DASHA_DATE_TOLERANCE_DAYS);
+        antardashaChecks++;
+      }
+    }
+    expect(antardashaChecks, "total antardasha boundaries checked").toBe(81);
+
+    const expPratyantardashas = dashaDetailFixture.pratyantardashaSequence;
+    expect(expPratyantardashas.length, "pratyantardasha fixture count").toBe(729);
+    let pratyantardashaChecks = 0;
+    for (const md of dasha.mahadashas) {
+      for (const ad of computeAntardashas(md)) {
+        const pratyantardashas = computePratyantardashas(ad);
+        expect(pratyantardashas.length, `${md.lord}/${ad.lord} pratyantardasha count`).toBe(9);
+        for (const pd of pratyantardashas) {
+          const expected = expPratyantardashas.find(
+            (p) => p.mahadashaLord === md.lord && p.antardashaLord === ad.lord && p.pratyantardashaLord === pd.lord
+          );
+          expect(expected, `no fixture pratyantardasha for ${md.lord}/${ad.lord}/${pd.lord}`).toBeDefined();
+          const delta = startDateDeltaDays(pd.start, expected!.start);
+          expect(delta, `pratyantardasha ${md.lord}/${ad.lord}/${pd.lord} start date off by ${delta} days`).toBeLessThanOrEqual(DASHA_DATE_TOLERANCE_DAYS);
+          pratyantardashaChecks++;
+        }
+      }
+    }
+    expect(pratyantardashaChecks, "total pratyantardasha boundaries checked").toBe(729);
   });
 });

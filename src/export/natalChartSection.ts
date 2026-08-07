@@ -25,8 +25,8 @@
  *     already uses -- every yoga/dosha Finding with a classification,
  *     including ABSENT, unfiltered by domain tag.
  */
-import type { ChartData, Finding, Graha, SignName } from "../types.js";
-import { renderSouthIndianChartSVG } from "../chart/southIndianChart.js";
+import type { ChartData, Finding } from "../types.js";
+import { renderSouthIndianChartSVG, buildD1ChartInput } from "../chart/southIndianChart.js";
 import { buildD9ChartInput } from "../chart/navamsaChart.js";
 import { allPlanetNotes, allHouseNotes, type PlanetNote, type HouseNote } from "../narrative/natal.js";
 import { buildPlanetRows, buildYogaRows, type PlanetRow, type YogaRow } from "./chartTables.js";
@@ -76,11 +76,7 @@ export function buildNatalChartSectionContent(
 ): NatalChartSectionContent {
   const seed = chart.ascendant.sign;
 
-  const planets: Record<string, { sign: SignName; retrograde?: boolean }> = {};
-  for (const graha of Object.keys(chart.planets) as Graha[]) {
-    planets[graha] = { sign: chart.planets[graha].sign, retrograde: chart.planets[graha].retrograde };
-  }
-  const chartSvgD1 = renderSouthIndianChartSVG({ lagnaSign: chart.ascendant.sign, planets }, { size: 400, centerText: "D1\nRasi" });
+  const chartSvgD1 = renderSouthIndianChartSVG(buildD1ChartInput(chart), { size: 400, centerText: "D1\nRasi" });
 
   const d9Input = buildD9ChartInput(chart);
   const chartSvgD9 = renderSouthIndianChartSVG(d9Input, { size: 400, centerText: "D9\nNavamsa" });

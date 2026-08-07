@@ -16,7 +16,7 @@
  * own sign placements are computed (not done yet; D1 is P6's only scope for
  * now, per BACKLOG.md).
  */
-import type { Graha, SignName } from "../types.js";
+import type { ChartData, Graha, SignName } from "../types.js";
 import { houseOf } from "../engine/houses.js";
 
 /**
@@ -60,6 +60,22 @@ export interface SouthIndianChartOptions {
   centerText?: string;
   /** Show each cell's whole-sign house number (relative to lagnaSign). Default true. */
   showHouseNumbers?: boolean;
+}
+
+/**
+ * D1 (Rasi) sign-placement assembly for renderSouthIndianChartSVG() --
+ * the D9 equivalent of navamsaChart.ts's buildD9ChartInput(), extracted
+ * from natalChartSection.ts's own (previously inline, duplicated) mapping
+ * so both callers share one implementation. Pure extraction: same fields,
+ * same source (chart.ascendant.sign, chart.planets[graha].{sign,retrograde}).
+ */
+export function buildD1ChartInput(chart: ChartData): SouthIndianChartInput {
+  const planets: SouthIndianChartInput["planets"] = {};
+  for (const graha of Object.keys(chart.planets) as Graha[]) {
+    const p = chart.planets[graha];
+    planets[graha] = { sign: p.sign, retrograde: p.retrograde };
+  }
+  return { lagnaSign: chart.ascendant.sign, planets };
 }
 
 function escapeXml(s: string): string {

@@ -204,11 +204,183 @@ See `README.md` for current status.
    explicitly parked as its own future design conversation, not scoped or
    started.** "Length follows data" (SKILL.md principle 3) may mean a shorter
    Full Blueprint is simply correct; not decided.
-   **Not yet built**: the free-tools cluster (needs this project's
-   first-ever UI-framework decision, AND separately, real Panchang
-   computation -- zero tithi/vara/karana logic exists anywhere in this
-   codebase or its reference material, a new Jyotish-domain feature
-   independent of the framework choice).
+   **Not yet built (real free-tools UI)**: both of the cluster's blocking
+   design gates were researched and written up 2026-08-07 (`DECISIONS.md`),
+   same discipline as the PDF-library/SVG-chart-layout gates -- both are now
+   implemented (2026-08-07):
+   - **UI framework: SCAFFOLDED.** Vite + SvelteKit (`adapter-static`),
+     recommended earlier this session as the only one where static-output
+     fidelity, bundle size, and "already-Vite" (present transitively via
+     `vitest`) all point the same direction. Lives in a new `web/`
+     subdirectory app (Option 1 of three repo-layout choices laid out and
+     confirmed this session: separate app + own `package.json`, not a full
+     npm-workspaces restructure of the existing, already-tested engine) with
+     `jyotish-engine` wired in as a `file:..` dependency (root `package.json`
+     gained `main`/`types` fields so `dist/` -- which already built cleanly,
+     just had no declared entry point -- is actually consumable;
+     `web/`'s `predev`/`prebuild` scripts rebuild it automatically so it
+     can't go stale). A real integration bug (Vite's dev-server filesystem
+     sandbox 403ing `@swisseph/browser`'s `.wasm` file, since it resolves
+     outside `web/`'s own root through the symlinked dependency) was found
+     by actually loading the app in a browser and fixed with
+     `server.fs.allow` in `web/vite.config.ts` -- confirmed fixed in a real
+     browser session (200 OK, real WASM init log), not just "the config
+     changed." A demo page (`web/src/routes/+page.svelte`) proves the whole
+     chain end to end: both `npm run dev` and the real static
+     `adapter-static` production build (`npm run preview`) render the
+     golden chart's own real Panchang, computed live in-browser via
+     `computePanchang()` inside `onMount` (never during prerendering, per
+     this project's zero-server-computation design). `.claude/launch.json`
+     added for `run`/browser-preview tooling. This wiring-check demo page
+     has since been REPLACED by the real Kundli Calculator page (below) --
+     it no longer exists as a separate route. A PWA manifest/service worker
+     (requirements-spec.md SS3) is still not added. The ~5.7MB
+     `data/cities.json` geocoding dataset is now code-split out of the main
+     bundle (`src/engine/geocoding.ts`, `geocodePlace()`/`resolveLocation()`
+     made async, lazy `import()` cached after first call -- see
+     `DECISIONS.md`, includes a real dev-only Vite MIME-type fix for
+     `web/vite.config.ts`) -- done, not open.
+   - **Kundli Calculator page: BUILT -- the first of the four real free
+     tools.** `web/src/routes/kundli/+page.svelte` (South Indian D1 + D9
+     charts, a 9-planet position table) plus
+     `web/src/lib/components/BirthInputForm.svelte`, the shared
+     date/time/place/precision input every one of the four tools needs, built
+     as its own reusable component from the start rather than inlined in
+     this one page. Calls the real `computeChart()` client-side, only from a
+     click handler, never at prerender time. Real golden-chart verification
+     in an actual browser (fresh tab, both dev server and the real
+     `adapter-static` production build): Ascendant, all 9 planets, and both
+     the D1 and D9 chart grids match `reference-chart-1983.json` exactly.
+     Along the way, extracted `buildD1ChartInput()` (`southIndianChart.ts`,
+     the D9-side `buildD9ChartInput()`'s counterpart) out of
+     `natalChartSection.ts`'s own previously-duplicated inline version --
+     confirmed a pure extraction (16 existing tests re-run, unchanged). Root
+     `/` now a minimal four-tool hub linking to `/kundli`; the other three
+     tools listed as "coming soon," not yet linked. See `DECISIONS.md`.
+   - **Dasha Timeline Viewer page: BUILT -- the second of the four real
+     free tools.** `web/src/routes/dasha-timeline/+page.svelte`: an
+     expandable Mahadasha -> Antardasha -> Pratyantardasha tree (each level
+     computed lazily on click, not all 810 boundaries eagerly up front),
+     plus an "as of" date picker (`findActivePeriod()`) that finds and
+     auto-expands whichever period was/is/will be active on any date, not
+     just today. Reuses `BirthInputForm` as-is (no changes needed -- the
+     first real proof it's genuinely shareable, as intended when it was
+     built for the kundli calculator). Reuses `result.dasha` from
+     `computeChart()` (already `computeMahadashaSequence()`'s own output)
+     rather than calling that function a second time for the same input.
+     `formatUtcDate()` added to `free-tools.ts`'s export list for the
+     tree's date labels. Real golden-chart verification in a live browser
+     (fresh tab, dev server AND the real `adapter-static` production
+     build): all 9 Mahadasha boundaries match `reference-chart-1983.json`
+     within the same already-documented ~3-day systematic offset every
+     other dasha check in this project carries; Antardasha/Pratyantardasha
+     chaining and lord-sequencing confirmed internally consistent; the "as
+     of" feature independently verified against a specific historical date
+     from the checked-in dasha-detail fixture. See `DECISIONS.md`. Root `/`
+     updated -- no longer "coming soon."
+   - **Panchang computation (tithi/vara/karana/yoga): BUILT.**
+     `src/engine/panchang.ts` (`tithiFor`, `karanaFor`, `panchangYogaFor`,
+     `nakshatraFor`, `varaFor`, `computePanchang`) plus
+     `.claude/skills/jyotish-engine/references/panchang.md` and
+     `config/panchang.json`, per the Surya Siddhanta sourcing (Burgess
+     translation, Ch. II v.64-69 for nakshatra/yoga/tithi/karana, Ch. I
+     v.36/51-52 for vara's sunrise-to-sunrise civil day) already researched
+     and confirmed 2026-08-07. `@swisseph/browser` has no rise/transit/set
+     function (confirmed by reading its full API) -- vara's sunrise
+     boundary uses a new, self-contained, cited sunrise primitive instead
+     (Meeus low-precision solar position algorithm, same as NOAA's ESRL
+     Solar Calculator), empirically validated to 2m49s against the golden
+     chart's real reported sunrise (05:55 AM IST, Chennai, 1983-04-23). A
+     real bug (`cos` used where the hour-angle formula needs `sin` of the
+     sunrise altitude, a >6 hour error) was caught specifically by testing
+     against that real reference value, not by internal consistency alone
+     -- see `DECISIONS.md`. `computePanchang()` run through the real
+     pipeline reproduces all five of the golden chart's own Prokerala-
+     reported panchang elements exactly (Nakshatra Purva Phalguni pada 2,
+     Tithi Ekadashi Shukla Paksha, Yoga Dhruva, Karana Vishti, Vara
+     Shanivara/Saturday). `tests/panchang.test.ts`, 17 tests. Suite:
+     355 -> 372. Its real reachability from `web/` was proven via a
+     wiring-check demo page (since replaced by the real Kundli Calculator
+     page, below) -- the Panchang tool's OWN UI (as opposed to the Kundli
+     Calculator, the first of the four to get a real page) is not yet built
+     (the free tools are standalone utility outputs per requirements-spec.md
+     §8, not part of the interpretive Findings/report pipeline) -- that's
+     still open, separate work.
+   - **Confidence Checker page: BUILT -- the third of the four real free
+     tools.** `web/src/routes/confidence/+page.svelte`: calls `computeChart()`
+     and reads `chart.confidenceFlags` directly (already
+     `computeConfidenceFlags()`'s own output) rather than calling that
+     function a second time. Absence of flags is stated as an explicit,
+     positive result, not left blank, per SKILL.md's own
+     report-absences-explicitly principle. Real golden-chart verification in
+     a live browser (fresh tab, dev server AND the real `adapter-static`
+     production build): reproduces exactly the 2 real flags this chart
+     triggers -- `ascendant_near_cusp` (matching `confidence.test.ts`'s own
+     existing golden-chart assertion) and `birth_time_round_number`
+     (predicted from reading `confidence.ts` before testing, then confirmed,
+     not discovered as a surprise). Reuses `BirthInputForm` unchanged. Root
+     `/` updated -- no longer "coming soon." See `DECISIONS.md`.
+   - **Panchang page: BUILT -- the fourth and last of the four real free
+     tools.** `web/src/routes/panchang/+page.svelte`: reuses `BirthInputForm`
+     unchanged and calls `computePanchang()` directly (no `computeChart()`
+     needed -- Panchang is the one tool that only needs Sun/Moon longitude
+     and the birth instant, not a full chart). A real discrepancy was caught
+     and flagged before this was built, not smoothed over: the instruction
+     that requested the Confidence Checker called it "the last of the four,"
+     but Panchang's engine had never gotten its own page (its earlier
+     wiring-check demo page was replaced by the Kundli Calculator) -- user
+     confirmed building it now. Real golden-chart verification, all five
+     elements, in a live browser (fresh tab, dev server AND the real
+     `adapter-static` production build): Shanivara, Ekadashi (Shukla Paksha),
+     Purva Phalguni pada 2, Dhruva, Vishti -- exact match to the raw
+     Prokerala source, the same standard `tests/panchang.test.ts` already
+     holds this engine to. Root `/` now links all four tools; the unused
+     `.pending` CSS class removed. See `DECISIONS.md`. **All four free tools
+     named in requirements-spec.md §8 now genuinely exist** -- the free-tools
+     cluster's UI is complete at v1 scope. Remaining open items (at the time):
+     geocoding admin1/state-hint disambiguation, a PWA manifest/service
+     worker, and code-splitting beyond the geocoding dataset.
+   - **Geocoding admin1 (state/province) disambiguation: DONE.**
+     `geocodePlace()`'s own long-standing KNOWN GAP (only country-level
+     disambiguation existed; state/province hints like "Illinois" in
+     "Springfield, Illinois, USA" were parsed but ignored, so ties fell back
+     to population and could return the wrong city). Closed via
+     `data/admin1.json` (GeoNames' own `admin1CodesASCII.txt`, fetched
+     directly -- `download.geonames.org` is reachable from this full Claude
+     Code CLI session even though it wasn't from the original sandboxed
+     session `cities.json`/`countries.json` were built in) and
+     `scripts/build-admin1-data.mjs`. `geocodePlace()` now tries an
+     admin1-code match first, then country, then population -- one more tier
+     on the same fallback chain, not a restructure. Real-data verification:
+     "Springfield, Illinois, USA" now correctly resolves to Springfield, IL
+     (lat 39.80172, matching `data/cities.json`'s own real entry) instead of
+     the higher-population Springfield, MO. Verified end-to-end through the
+     real Kundli Calculator UI too (dev server and the static production
+     build), not just at the engine/test level -- `admin1.json` needed the
+     same dev-only Vite MIME-type fix `cities.json`/`countries.json` already
+     had. `data/README.md`'s "Known gap" section rewritten to "DONE". See
+     `DECISIONS.md`. Suite: 372 -> 374.
+   - **PWA manifest and service worker: DONE** -- closes
+     requirements-spec.md §3's "a PWA manifest for offline and installable
+     use", the last open free-tools-cluster item. `@vite-pwa/sveltekit`
+     (`web/vite.config.ts`), a real on-brand icon generated via
+     `scripts/build-pwa-icons.mjs` (reusing `@resvg/resvg-js`, already a root
+     dependency -- not the SvelteKit scaffold's own default Svelte-logo
+     favicon), manifest link + service-worker registration wired into
+     `web/src/routes/+layout.svelte` (a real gap the plugin didn't handle
+     automatically, found by checking the actual built HTML, not assumed
+     from "zero-config" framing). `cities.json`'s ~5.7MB chunk is explicitly
+     excluded from precaching (`maximumFileSizeToCacheInBytes`) so
+     installing the PWA doesn't silently undo the geocoding lazy-load fix
+     above -- `admin1.json`'s own much smaller chunk (~86KB) is under the
+     threshold and IS precached, confirmed directly against the built
+     `sw.js` (an earlier version of this note incorrectly implied both were
+     excluded the same way; corrected 2026-08-07, see `DECISIONS.md`).
+     Verified in a real static-preview browser session: active
+     service-worker registration, valid fetched manifest, 37 precached
+     entries including `/kundli`'s own prerendered HTML (real offline
+     availability of the app shell, not just a manifest file existing on
+     disk). See `DECISIONS.md`.
    **Section 8 (Remedies & Executive Summary): BUILT AND WIRED IN --
    Full Blueprint is now a genuine 8/8-section document, real page count
    re-measured at 4 (via 5, briefly, before a real Executive Summary
@@ -425,22 +597,31 @@ See `README.md` for current status.
 
 - **Golden chart: Sun, Mars, Rahu, and Ketu land just outside the stated
   1 arc-minute longitude tolerance** (1.20', 1.25', 1.03', 1.03'
-  respectively). 5/9 planets + Ascendant pass cleanly. Most likely
-  explanation: imprecision in this fixture's own hand-derived values, not a
-  pipeline bug (see reasoning in the fixture's `_status` field and
-  `DECISIONS.md`). Deliberately not "fixed" by tightening ephemeris
-  precision or widening tolerance -- resolve via a second, independent
-  golden chart once the set expands (item 1 above).
+  respectively). 5/9 planets + Ascendant pass cleanly. **RESOLVED as to
+  cause, 2026-08-07 (DECISIONS.md): NOT imprecision in this fixture's own
+  hand-derived values** -- the fixture's raw Prokerala source was located,
+  checked into the repo (`tests/golden-charts/sources/
+  reference-chart-1983-prokerala-raw.md`), and independently verified to
+  match the fixture's own numbers exactly, closing the "is this a
+  transcription error" question this entry originally raised. The real gap
+  is a genuine Prokerala-vs-this-project's-own-engine (`@swisseph/browser`,
+  Moshier-based) difference. **Still open**: which source is actually closer
+  to true -- that needs a genuinely independent THIRD source (not another
+  read of the same Prokerala report), same resolution path as item 1 above,
+  not tightening ephemeris precision or widening tolerance.
 
 - **Golden chart: every Mahadasha boundary date is a constant ~3 days off
-  from the fixture.** Downstream consequence of the same Moon-longitude gap
-  above, propagated through `birthBalance.balanceYears` -- exactly what
-  SKILL.md's `references/dasha.md` warns "a few arcminutes shifts the
-  balance by days, which compounds through every subsequent boundary." The
-  offset is constant across all 9 boundaries (not growing), which is the
-  expected signature of this cause, not of a chaining bug -- see
-  `DECISIONS.md`. Same resolution path as the item above: a second,
-  independent golden chart, not tightening ephemeris precision.
+  from the fixture** -- and, confirmed 2026-08-07, so is every Antardasha
+  and Pratyantardasha boundary beneath it (checked against the same raw
+  source, all 81 + 729 of them; the offset stays constant with depth, never
+  compounds). Downstream consequence of the same Moon-longitude gap above,
+  propagated through `birthBalance.balanceYears` -- exactly what SKILL.md's
+  `references/dasha.md` warns "a few arcminutes shifts the balance by days,
+  which compounds through every subsequent boundary." The offset is constant
+  across all 9 Mahadasha boundaries (not growing), which is the expected
+  signature of this cause, not of a chaining bug -- see `DECISIONS.md`. Same
+  resolution path as the item above: a genuinely independent third source,
+  not tightening ephemeris precision.
 
 ## Deferred features (out of scope for now)
 
@@ -468,7 +649,7 @@ reconstructing from memory or a secondary source:
 
 ## Not started
 
-- P6 document assembly: the free-tools cluster remains the only unbuilt piece -- SVG chart (D1+D9), PDF/DOCX export at Essence/Overview depth, and Full Blueprint's own document/pagination pipeline are all built, and as of 2026-08-03/04 Full Blueprint is a genuine 8/8-section document (section 8, Remedies & Executive Summary, built and wired in -- see "Next up" above). Real, measured page count: 5 (not 4, not 40-60) -- re-measured specifically because every section now has genuine content, not because the count was expected to move; the architectural diagnosis (`render.ts` only ever quotes `Finding.statement` verbatim, never generates elaborated prose) is unchanged and still the reason the 40-60 estimate isn't close. Whether to pursue paid/BYOK LLM elaboration to actually close that gap is its own future design conversation, not started.
+- P6 document assembly: the free-tools cluster remains the only unbuilt piece -- SVG chart (D1+D9), PDF/DOCX export at Essence/Overview depth, and Full Blueprint's own document/pagination pipeline are all built, and as of 2026-08-03/04 Full Blueprint is a genuine 8/8-section document (section 8, Remedies & Executive Summary, built and wired in -- see "Next up" above). Real, measured page count: 4 (not 5, not 40-60) -- briefly 5 immediately after Section 8 first landed, then back to 4 once a real Executive Summary ranking bug was found and fixed (see "Next up" above); re-measured each time specifically because content changed, not because the count was expected to move on its own; the architectural diagnosis (`render.ts` only ever quotes `Finding.statement` verbatim, never generates elaborated prose) is unchanged and still the reason the 40-60 estimate isn't close. Whether to pursue paid/BYOK LLM elaboration to actually close that gap is its own future design conversation, not started. Free-tools cluster's own two blocking design gates (UI framework; Panchang calculation method) were researched and written up 2026-08-07 (`DECISIONS.md` -- see "Next up" above); both are now implemented: Panchang is golden-chart-verified (`src/engine/panchang.ts`), and the UI framework is scaffolded (`web/`, Vite + SvelteKit + `adapter-static`). **All four real free-tool pages are now built and golden-chart-verified in a real browser: Kundli Calculator (`web/src/routes/kundli/`), Panchang (`web/src/routes/panchang/`), Dasha Timeline Viewer (`web/src/routes/dasha-timeline/`), and the Confidence Checker (`web/src/routes/confidence/`).** The free-tools cluster's UI is complete at v1 scope. Geocoding's admin1/state-hint disambiguation gap is now closed too (`data/admin1.json`), and so is the PWA manifest/service worker (`@vite-pwa/sveltekit`, see "Next up" above) -- **every item requirements-spec.md §3/§8 named for the free-tools cluster is now built.** Remaining open item: bundle code-splitting beyond the geocoding dataset (a real, stated limitation, not a spec requirement).
 - P7b Jupiter/Saturn transit ingress detection: search primitive and `.ics` export both done and validated (`src/engine/transit.ts`, `src/export/transitCalendar.ts` -- see "Next up" above); not yet wired into `computeChart()`'s output or merged with the dasha `.ics` into a single file
 - P7's versioned-regeneration-with-diffs requirement -- not yet scoped into either P7a or P7b
 - Timing's deferred "Timeline" scope (transit overlay, ranked/reasoned turning points) -- see "Known gaps" above
